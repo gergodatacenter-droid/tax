@@ -10,6 +10,11 @@ import os
 import aiohttp
 import json
 from datetime import datetime
+try:
+    from aiogram.types import InlineKeyboardMarkup
+except ImportError:
+    # aiogram may not be available in this context, but the hasattr check will still work
+    pass
 
 
 # === Настройки ===
@@ -53,7 +58,7 @@ def start_webapp(bot_instance):
     bot = bot_instance
     # остальной код запуска веб-приложения
 
-def send_telegram_message(chat_id, text):
+def send_telegram_message_direct(chat_id, text):
     # Импорт происходит ТОЛЬКО при вызове функции
     from main import bot
     return asyncio.run(bot.send_message(chat_id, text))
@@ -115,7 +120,23 @@ async def send_telegram_message(chat_id: int, text: str, reply_markup=None):
             "disable_web_page_preview": True
         }
         if reply_markup:
-            payload["reply_markup"] = json.dumps(reply_markup, ensure_ascii=False)
+            # Convert InlineKeyboardMarkup to dictionary if needed
+            if hasattr(reply_markup, 'to_dict'):
+                # If it's an aiogram InlineKeyboardMarkup object, convert to dict
+                reply_markup = reply_markup.to_dict()
+            elif isinstance(reply_markup, dict):
+                # If it's already a dict, use as is
+                pass
+            else:
+                # If it's some other format, try to convert to dict
+                try:
+                    reply_markup = dict(reply_markup)
+                except (TypeError, ValueError):
+                    logger.warning(f"Could not convert reply_markup to dict: {type(reply_markup)}")
+                    reply_markup = None
+            
+            if reply_markup:
+                payload["reply_markup"] = json.dumps(reply_markup, ensure_ascii=False)
 
         logger.debug(f"📤 Отправка сообщения на {TELEGRAM_API_URL}/sendMessage")
         logger.debug(f"📦 Payload: {json.dumps(payload, ensure_ascii=False, indent=2)}")

@@ -259,16 +259,6 @@
       align-items: center;
       gap: 2px;
     }
-    .user-card {
-      background: var(--card-bg);
-      border-bottom: 1px solid var(--border-color);
-      padding: 16px;
-    }
-    .user-stats {
-      display: flex;
-      justify-content: space-around;
-      text-align: center;
-    }
     /* Карта и остальные стили */
     .map-container {
       height: 280px;
@@ -1291,30 +1281,6 @@
       <div class="header-title">Карта</div>
       <div class="avatar" id="profileAvatar">
         <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'%3E%3Cpath fill='%23888' d='M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6 3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E" alt="User" id="userAvatar">
-      </div>
-    </div>
-    <!-- Карточка пользователя -->
-    <div class="user-card">
-      <div class="user-stats">
-        <div class="stat-item">
-          <span class="stat-label">Статус</span>
-          <span class="stat-value stat-status">Загрузка...</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Заказы</span>
-          <span class="stat-value stat-orders">0</span>
-        </div>
-        <div class="stat-item">
-          <span class="stat-label">Рейтинг</span>
-          <div class="stat-value stat-rating">
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star"></i>
-            <i class="fas fa-star-half-alt"></i>
-            <span style="margin-left: 4px;">0.0</span>
-          </div>
-        </div>
       </div>
     </div>
     <!-- Статус геолокации -->
@@ -3190,10 +3156,6 @@ function getTrafficLevel(route) {
         // Сохраняем в localStorage
         localStorage.setItem('profileData', JSON.stringify(profileData));
         localStorage.setItem('profileLastUpdate', Date.now().toString());
-        
-        // Обновляем карточку пользователя на главной странице
-        updateMainPageUserCard(profileData);
-        
         return profileData;
       } else {
         // Пробуем получить детали ошибки
@@ -3224,55 +3186,6 @@ function getTrafficLevel(route) {
       return null;
     }
   }
-
-  // Функция для обновления карточки пользователя на главной странице
-  function updateMainPageUserCard(profileData) {
-    if (!profileData) return;
-    
-    // Обновляем статус
-    let status = "Загрузка...", statusClass = "";
-    if (profileData.ride_count >= 30) {
-      status = "Платина"; statusClass = "stat-platinum";
-    } else if (profileData.ride_count >= 20) {
-      status = "Золото"; statusClass = "stat-gold";
-    } else if (profileData.ride_count >= 10) {
-      status = "Серебро"; statusClass = "stat-silver";
-    } else {
-      status = "Стандарт"; statusClass = "";
-    }
-    
-    const statusEl = document.querySelector('.stat-status');
-    if (statusEl) {
-      statusEl.className = 'stat-value stat-status ' + statusClass;
-      statusEl.textContent = status;
-    }
-    
-    // Обновляем количество заказов
-    const ordersEl = document.querySelector('.stat-orders');
-    if (ordersEl) {
-      ordersEl.textContent = profileData.ride_count || 0;
-    }
-    
-    // Обновляем рейтинг с звездами
-    const ratingEl = document.querySelector('.stat-rating');
-    if (ratingEl) {
-      const avgRating = profileData.average_rating || profileData.rating || 0;
-      const fullStars = Math.floor(avgRating);
-      const hasHalfStar = avgRating - fullStars >= 0.5;
-      const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-      
-      let starsHTML = '';
-      for (let i = 0; i < fullStars; i++) starsHTML += '<i class="fas fa-star"></i>';
-      if (hasHalfStar) starsHTML += '<i class="fas fa-star-half-alt"></i>';
-      for (let i = 0; i < emptyStars; i++) starsHTML += '<i class="far fa-star"></i>';
-      
-      ratingEl.innerHTML = `
-        ${starsHTML}
-        <span style="margin-left: 4px;">${avgRating > 0 ? avgRating.toFixed(1) : '—'}</span>
-      `;
-    }
-  }
-
   async function showProfileModal() {
     if (isProfileModalOpen) return;
     isProfileModalOpen = true;
@@ -3331,7 +3244,7 @@ function getTrafficLevel(route) {
         status = "Серебро"; statusClass = "stat-silver";
       }
       // Обновляем статус
-      const statusEl = document.querySelector('.profile-stats .stat-item:first-child .stat-value');
+      const statusEl = document.querySelector('.stat-value:not(.stat-rating):not(.stat-orders)');
       if (statusEl) {
         statusEl.className = 'stat-value ' + statusClass;
         statusEl.textContent = status;
@@ -3584,10 +3497,6 @@ function getTrafficLevel(route) {
             dropoff_lat: dropoffCoords[0],
             dropoff_lon: dropoffCoords[1]
           });
-          
-          // Обновляем данные профиля, чтобы отразить новый заказ
-          console.log('🔄 Обновляем данные профиля после создания заказа');
-          await refreshProfileData();
           
           // Сохраняем данные для возможного восстановления
           const backupOrderData = {

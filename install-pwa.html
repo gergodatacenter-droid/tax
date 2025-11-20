@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Установить Такси Барс</title>
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="apple-touch-icon" href="/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f9fa;
+      color: #212121;
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 25px;
+      color: #1a1a1a;
+    }
+    #installBtn {
+      background: #000;
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      font-size: 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      width: 100%;
+      max-width: 300px;
+      margin: 0 auto;
+      display: block;
+      font-weight: 500;
+    }
+    #installBtn:hover:not(:disabled) {
+      background: #333;
+      transform: translateY(-2px);
+    }
+    #installBtn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .note {
+      margin-top: 25px;
+      font-size: 15px;
+      color: #666;
+      padding: 0 10px;
+    }
+    
+    /* iOS Instructions Styles */
+    .ios-instructions {
+      display: none;
+      text-align: left;
+      margin-top: 20px;
+      padding: 20px;
+      background: #f0f7ff;
+      border-radius: 12px;
+      border: 1px solid #d0e3f1;
+    }
+    .ios-instructions.active {
+      display: block;
+    }
+    .ios-step {
+      display: flex;
+      margin-bottom: 15px;
+      align-items: flex-start;
+    }
+    .ios-step-number {
+      min-width: 24px;
+      height: 24px;
+      background: #0066ff;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      flex-shrink: 0;
+      font-weight: bold;
+    }
+    .ios-step-text {
+      flex: 1;
+    }
+    .ios-icon {
+      font-size: 24px;
+      margin: 5px 0;
+    }
+    .ios-warning {
+      background: #fff8e6;
+      border-left: 3px solid #ffc107;
+      padding: 12px 15px;
+      margin-top: 15px;
+      border-radius: 0 8px 8px 0;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Установите «Такси Барс» на свой телефон</h1>
+    
+    <button id="installBtn" disabled>Добавить на главный экран</button>
+    
+    <div id="iosInstructions" class="ios-instructions">
+      <h3>📱 Инструкция для iPhone/iPad</h3>
+      <div class="ios-step">
+        <div class="ios-step-number">1</div>
+        <div class="ios-step-text">
+          Нажмите на иконку <span class="ios-icon">↗️</span> внизу экрана
+          <div style="font-weight:500;color:#0066ff;margin:5px 0">Поделиться</div>
+        </div>
+      </div>
+      <div class="ios-step">
+        <div class="ios-step-number">2</div>
+        <div class="ios-step-text">
+          В меню выберите 
+          <div style="font-weight:500;color:#0066ff;margin:5px 0">На экран «Домой»</div>
+        </div>
+      </div>
+      <div class="ios-step">
+        <div class="ios-step-number">3</div>
+        <div class="ios-step-text">
+          Нажмите <span style="font-weight:500">Добавить</span> в правом верхнем углу
+        </div>
+      </div>
+      <div class="ios-warning">
+        ⚠️ Приложение будет установлено через Safari. Для работы нужен интернет-доступ.
+      </div>
+    </div>
+    
+    <p class="note">Приложение будет работать как обычное мобильное приложение с быстрым доступом и без адресной строки</p>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const installBtn = document.getElementById('installBtn');
+      const iosInstructions = document.getElementById('iosInstructions');
+      let deferredPrompt;
+
+      // Проверка на iOS
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      
+      if (isIOS) {
+        // Для iOS показываем инструкции сразу
+        iosInstructions.classList.add('active');
+        installBtn.style.display = 'none';
+        
+        console.log('iOS device detected - showing manual instructions');
+      } else {
+        // Для Android и других платформ
+        window.addEventListener('beforeinstallprompt', (e) => {
+          e.preventDefault();
+          deferredPrompt = e;
+          installBtn.disabled = false;
+          installBtn.textContent = 'Установить приложение';
+        });
+        
+        installBtn.addEventListener('click', async () => {
+          if (!deferredPrompt) return;
+          
+          deferredPrompt.prompt();
+          
+          const { outcome } = await deferredPrompt.userChoice;
+          
+          if (outcome === 'accepted') {
+            installBtn.textContent = '✅ Установлено!';
+            installBtn.disabled = true;
+          }
+          
+          deferredPrompt = null;
+        });
+      }
+
+      // Если приложение уже установлено (работает только на Android)
+      window.addEventListener('appinstalled', () => {
+        if (!isIOS) {
+          installBtn.textContent = '✅ Установлено!';
+          installBtn.disabled = true;
+        }
+      });
+    });
+  </script>
+</body>
+</html>

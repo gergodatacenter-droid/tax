@@ -1,0 +1,1830 @@
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#000000">
+  <title>Такси Барс - Заказ принят</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #000;
+      --primary-dark: #1a1a1a;
+      --background-light: #f8f9fa;
+      --background-medium: #f0f0f0;
+      --border-color: #d9d9d9;
+      --text-color: #212121;
+      --text-secondary: #616161;
+      --card-bg: #ffffff;
+      --shadow-light: rgba(0, 0, 0, 0.03);
+      --shadow-medium: rgba(0, 0, 0, 0.08);
+      --error-color: #d32f2f;
+      --success-color: #2e7d32;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    body {
+      background-color: var(--background-light);
+      color: var(--text-color);
+      line-height: 1.5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 0;
+      overflow-x: hidden;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
+    .order-container {
+      max-width: 480px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px var(--shadow-light);
+      position: relative;
+      margin: 10px;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 20px);
+      max-height: 800px;
+      border: 1px solid var(--border-color);
+    }
+    /* Современный прогресс-бар */
+    .progress-bar {
+      height: 3px;
+      background: #e0e0e0;
+      border-radius: 2px;
+      overflow: hidden;
+      margin: 16px 0 10px;
+      position: relative;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--primary-color);
+      border-radius: 2px;
+      width: 33.33%;
+      transition: width 0.5s ease;
+    }
+    .progress-steps {
+      display: flex;
+      justify-content: space-between;
+      position: relative;
+      margin-top: 8px;
+    }
+    .progress-step {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      flex: 1;
+      padding: 0 4px;
+    }
+    .step-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    .step-label.active {
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+    .step-marker {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #e0e0e0;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--text-color);
+      border: 2px solid var(--card-bg);
+      transition: all 0.3s ease;
+    }
+    .step-marker.active {
+      background: var(--primary-color);
+      color: white;
+    }
+    .step-marker.completed {
+      background: var(--success-color);
+      color: white;
+    }
+    /* Стилизованные уведомления (уменьшенные) */
+    .status-notification {
+      padding: 10px 14px;
+      background: var(--card-bg);
+      border-radius: 14px;
+      box-shadow: var(--shadow-light);
+      text-align: left;
+      font-size: 14px;
+      color: var(--text-color);
+      font-weight: 500;
+      transition: all 0.3s ease;
+      margin-top: 12px;
+      position: relative;
+      overflow: hidden;
+      border: none;
+    }
+    .status-notification::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 4px;
+      background: var(--primary-color);
+    }
+    .status-notification.waiting::before {
+      background: #9e9e9e;
+    }
+    .status-notification.warning::before {
+      background: #ff9800;
+    }
+    .status-notification.error::before {
+      background: var(--error-color);
+    }
+    .status-notification.success::before {
+      background: var(--success-color);
+    }
+    .notification-icon {
+      display: flex;
+      align-items: center;
+      margin-bottom: 4px;
+      font-size: 16px;
+    }
+    .notification-warning .notification-icon {
+      color: #ff9800;
+    }
+    .notification-error .notification-icon {
+      color: var(--error-color);
+    }
+    .notification-success .notification-icon {
+      color: var(--success-color);
+    }
+    .notification-text {
+      line-height: 1.4;
+      margin-bottom: 8px;
+      color: var(--text-color);
+    }
+    .notification-actions {
+      margin-top: 10px;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+    .notification-btn {
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+    .notification-btn.retry {
+      background: #e0e0e0;
+      color: var(--text-color);
+    }
+    .notification-btn.retry:hover {
+      background: #d5d5d5;
+    }
+    .notification-btn.primary {
+      background: var(--primary-color);
+      color: white;
+    }
+    .notification-btn.primary:hover {
+      background: var(--primary-dark);
+    }
+    /* Стилизованный блок водителя и автомобиля */
+    .info-section {
+      padding: 16px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .info-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      border: 1px solid var(--border-color);
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 3px var(--shadow-light);
+    }
+    .info-card-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .info-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--background-medium);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 10px;
+      flex-shrink: 0;
+      color: var(--text-color);
+      font-size: 16px;
+    }
+    .info-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+    .driver-car-container {
+      background: var(--card-bg);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px var(--shadow-light);
+      margin-bottom: 16px;
+    }
+    .driver-section {
+      display: flex;
+      padding: 16px;
+      background: var(--background-light);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .driver-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-color) 0%, #333 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 28px;
+      font-weight: bold;
+      flex-shrink: 0;
+      border: 2px solid var(--card-bg);
+      margin-right: 16px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    .driver-info {
+      flex: 1;
+    }
+    .driver-name-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .driver-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-color);
+    }
+    .driver-badge {
+      background: var(--background-medium);
+      color: var(--text-color);
+      font-size: 12px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .driver-badge i {
+      font-size: 12px;
+    }
+    .driver-rating {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      color: #ffc107;
+      margin-bottom: 8px;
+    }
+    .driver-rating span {
+      color: var(--text-secondary);
+      margin-left: 4px;
+    }
+    .car-section {
+      padding: 16px;
+    }
+    .car-info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .car-model {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+    .car-details {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+    .car-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .car-feature {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--background-light);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 13px;
+    }
+    .car-feature i {
+      font-size: 14px;
+      color: var(--primary-color);
+    }
+    .driver-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .driver-btn {
+      flex: 1;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: var(--card-bg);
+      color: var(--text-color);
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .driver-btn:hover {
+      background: var(--background-light);
+      transform: translateY(-1px);
+    }
+    .driver-btn.message {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .driver-btn.message:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+    }
+    /* Исправленный стилизованный блок маршрута */
+    .route-styled {
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      box-shadow: 0 2px 8px var(--shadow-light);
+      margin-bottom: 16px;
+    }
+    .route-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: var(--background-light);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .route-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .route-title i {
+      color: var(--text-color);
+      font-size: 16px;
+    }
+    .route-toggle {
+      background: none;
+      border: none;
+      color: var(--primary-color);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 500;
+    }
+    .route-content {
+      padding: 20px 16px;
+      position: relative;
+    }
+    .route-line-container {
+      position: relative;
+      padding-left: 56px;
+      margin: 10px 0;
+    }
+    .route-line {
+      position: absolute;
+      left: 28px;
+      top: 24px;
+      bottom: 24px;
+      width: 2px;
+      background: var(--border-color);
+    }
+    .route-point {
+      display: flex;
+      margin-bottom: 24px;
+      position: relative;
+      z-index: 2;
+    }
+    .route-point:last-child {
+      margin-bottom: 0;
+    }
+    .point-marker {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      left: 0;
+      top: -6px;
+      font-weight: bold;
+      font-size: 14px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      z-index: 3;
+    }
+    .point-marker.start {
+      background: var(--primary-color);
+      color: white;
+      border: 3px solid white;
+    }
+    .point-marker.end {
+      background: var(--background-medium);
+      color: var(--text-color);
+      border: 3px solid white;
+    }
+    .point-info {
+      flex: 1;
+      min-width: 0;
+      padding-left: 48px;
+    }
+    .point-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 2px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .point-label i {
+      font-size: 14px;
+    }
+    .point-address {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-color);
+      line-height: 1.4;
+      word-wrap: break-word;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+    .point-address.full {
+      -webkit-line-clamp: unset;
+    }
+    .route-details {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+    .route-details.active {
+      max-height: 500px;
+    }
+    .route-info {
+      background: var(--background-light);
+      border-radius: 14px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    .route-info-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .route-info-row:last-child {
+      border-bottom: none;
+    }
+    .info-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    .info-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+    .info-value.highlight {
+      color: var(--primary-color);
+    }
+    /* Футер с управлением */
+    .order-footer {
+      padding: 16px 20px 20px;
+      border-top: 1px solid var(--border-color);
+      background: var(--card-bg);
+      position: sticky;
+      bottom: 0;
+    }
+    .order-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .info-item {
+      text-align: center;
+    }
+    .info-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    .info-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+    .info-value.price {
+      font-size: 18px;
+      color: var(--text-color);
+    }
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+    }
+    .action-btn {
+      flex: 1;
+      padding: 13px;
+      border-radius: 14px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      border: none;
+    }
+    .cancel-btn {
+      background: var(--card-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+    }
+    .cancel-btn:hover {
+      background: var(--background-light);
+    }
+    .cancel-btn:disabled {
+      background: var(--background-medium);
+      color: var(--text-secondary);
+      cursor: not-allowed;
+      border-color: var(--border-color);
+    }
+    .finish-btn {
+      background: var(--primary-color);
+      color: white;
+    }
+    .finish-btn:hover {
+      background: var(--primary-dark);
+    }
+    .finish-btn:disabled {
+      background: var(--background-medium);
+      color: var(--text-secondary);
+      cursor: not-allowed;
+    }
+    /* Стилизованное модальное окно подтверждения отмены */
+    .cancel-modal {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-radius: 16px 16px 0 0;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+      padding: 24px;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      z-index: 1000;
+      max-width: 480px;
+      margin: 0 auto;
+      border-top: 1px solid var(--border-color);
+    }
+    .cancel-modal.active {
+      transform: translateY(0);
+    }
+    .cancel-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      position: relative;
+    }
+    .cancel-modal-header::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 40px;
+      height: 4px;
+      background: var(--border-color);
+      border-radius: 2px;
+    }
+    .cancel-modal-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: var(--background-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      color: var(--primary-color);
+      font-size: 24px;
+    }
+    .cancel-modal-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .cancel-modal-text {
+      font-size: 16px;
+      color: var(--text-secondary);
+      text-align: center;
+      line-height: 1.5;
+      margin-bottom: 24px;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .modal-btn {
+      flex: 1;
+      padding: 16px;
+      border-radius: 16px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .no-btn {
+      background: var(--background-light);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+    }
+    .no-btn:hover {
+      background: var(--border-color);
+      transform: translateY(-1px);
+    }
+    .yes-btn {
+      background: var(--primary-color);
+      color: white;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    .yes-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    }
+    /* Анимации */
+    .order-container {
+      opacity: 0;
+      transform: translateY(15px);
+      animation: fadeInUp 0.4s ease forwards;
+    }
+    @keyframes fadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    /* Подложка для модального окна */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.4);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 999;
+    }
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    /* Временные уведомления */
+    .temp-notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #000;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 10px;
+      z-index: 10000;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      animation: slideDown 0.3s ease;
+    }
+    @keyframes slideDown {
+      from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+      to { transform: translateX(-50%) translateY(0); opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { transform: translateX(-50%) translateY(0); opacity: 1; }
+      to { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+    }
+    @media (max-width: 480px) {
+      .order-container {
+        margin: 5px;
+        border-radius: 14px;
+      }
+      .driver-avatar {
+        width: 56px;
+        height: 56px;
+        font-size: 24px;
+      }
+      .driver-name {
+        font-size: 17px;
+      }
+      .action-btn {
+        padding: 12px;
+        font-size: 14px;
+      }
+      .info-value.price {
+        font-size: 18px;
+      }
+      .progress-steps {
+        margin-bottom: 16px;
+      }
+      .point-address {
+        font-size: 14px;
+      }
+      .route-content {
+        padding: 16px;
+      }
+      .status-notification {
+        font-size: 13px;
+        padding: 10px 12px;
+      }
+      .cancel-modal {
+        padding: 20px 16px;
+      }
+      .modal-btn {
+        padding: 14px;
+        font-size: 15px;
+      }
+    }
+    @media (max-height: 650px) {
+      .order-container {
+        height: auto;
+        max-height: 90vh;
+      }
+      .info-section {
+        padding: 12px;
+      }
+      .route-styled {
+        margin-bottom: 12px;
+      }
+    }
+    /* Для iOS PWA */
+    @supports (padding: max(0px)) {
+      .order-container {
+        margin-top: max(10px, env(safe-area-inset-top));
+        margin-bottom: max(10px, env(safe-area-inset-bottom));
+      }
+      .confirmation-screen {
+        padding-top: calc(env(safe-area-inset-top) + 20px);
+        padding-bottom: calc(env(safe-area-inset-bottom) + 20px);
+        padding-left: calc(env(safe-area-inset-left) + 20px);
+        padding-right: calc(env(safe-area-inset-right) + 20px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="order-container">
+    <!-- Прогресс-бар с уведомлением внутри контейнера -->
+    <div class="progress-container">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-steps">
+        <div class="progress-step">
+          <div class="step-marker active" id="step1">1</div>
+          <div class="step-label active" id="label1">Водитель<br>в пути</div>
+        </div>
+        <div class="progress-step">
+          <div class="step-marker" id="step2">2</div>
+          <div class="step-label" id="label2">Водитель<br>ожидает</div>
+        </div>
+        <div class="progress-step">
+          <div class="step-marker" id="step3">3</div>
+          <div class="step-label" id="label3">Завершение</div>
+        </div>
+      </div>
+      <!-- Уведомление внутри контейнера прогресс-бара -->
+      <div class="status-notification waiting" id="statusNotification">
+        <div class="notification-icon">
+          <i class="fas fa-car"></i>
+        </div>
+        <div class="notification-text" id="statusText">
+          Водитель будет у вас через <span id="etaText">5</span> минут
+        </div>
+      </div>
+    </div>
+    <!-- Основная информация -->
+    <div class="info-section">
+      <!-- Стилизованный объединенный блок водителя и автомобиля -->
+      <div class="driver-car-container">
+        <!-- Секция водителя -->
+        <div class="driver-section">
+          <div class="driver-avatar" id="driverAvatar">
+            А
+          </div>
+          <div class="driver-info">
+            <div class="driver-name-row">
+              <div class="driver-name" id="driverName">Александр Петров</div>
+              <div class="driver-badge">
+                <i class="fas fa-shield-alt"></i>
+                <span>Проверен</span>
+              </div>
+            </div>
+            <div class="driver-rating" id="driverRatingContainer">
+              <!-- Здесь будет динамически обновляться рейтинг -->
+            </div>
+          </div>
+        </div>
+        <!-- Секция автомобиля -->
+        <div class="car-section">
+          <div class="car-info-row">
+            <div class="car-model" id="carModel">Skoda Octavia</div>
+          </div>
+          <div class="car-details" id="carDetails">2022 г. | Серебристый | А 123 ВС 777</div>
+          <div class="car-features">
+            <div class="car-feature">
+              <i class="fas fa-user-friends"></i>
+              <span id="passengerCount">4</span> места
+            </div>
+            <div class="car-feature">
+              <i class="fas fa-suitcase"></i>
+              <span>3 чемодана</span>
+            </div>
+            <div class="car-feature">
+              <i class="fas fa-snowflake"></i>
+              <span>Кондиционер</span>
+            </div>
+            <div class="car-feature">
+              <i class="fas fa-tint"></i>
+              <span>Климат-контроль</span>
+            </div>
+          </div>
+          <div class="driver-actions">
+            <button class="driver-btn message" id="messageDriverBtn">
+              <i class="fas fa-comment-alt"></i>
+              <span>Сообщение</span>
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- Исправленный блок маршрута -->
+      <div class="route-styled">
+        <div class="route-header">
+          <div class="route-title">
+            <i class="fas fa-route"></i>
+            <span>Маршрут</span>
+          </div>
+          <button class="route-toggle" id="toggleRouteDetails">
+            <i class="fas fa-info-circle"></i>
+            <span>Детали</span>
+          </button>
+        </div>
+        <div class="route-content">
+          <div class="route-line-container">
+            <div class="route-line"></div>
+            <div class="route-point">
+              <div class="point-marker start">
+                <i class="fas fa-location-arrow" style="font-size: 16px; transform: rotate(-45deg);"></i>
+              </div>
+              <div class="point-info">
+                <div class="point-label">
+                  <i class="fas fa-dot-circle"></i>
+                  <span>Откуда</span>
+                </div>
+                <div class="point-address" id="pickupAddress">ул. Ленина, 15, Новосибирск, Россия</div>
+              </div>
+            </div>
+            <div class="route-point">
+              <div class="point-marker end">
+                <i class="fas fa-flag-checkered" style="font-size: 14px;"></i>
+              </div>
+              <div class="point-info">
+                <div class="point-label">
+                  <i class="fas fa-map-pin"></i>
+                  <span>Куда</span>
+                </div>
+                <div class="point-address" id="dropoffAddress">ул. Советская, 42, Офисный центр «Город», Новосибирск, Россия</div>
+              </div>
+            </div>
+          </div>
+          <div class="route-details" id="routeDetails">
+            <div class="route-info">
+              <div class="route-info-row">
+                <div class="info-label">Расстояние</div>
+                <div class="info-value highlight" id="distanceDisplay">5.3 км</div>
+              </div>
+              <div class="route-info-row">
+                <div class="info-label">Время в пути</div>
+                <div class="info-value highlight" id="timeDisplay">12 минут</div>
+              </div>
+              <div class="route-info-row">
+                <div class="info-label">Стоимость</div>
+                <div class="info-value highlight" id="priceDisplay">320 ₽</div>
+              </div>
+              <div class="route-info-row">
+                <div class="info-label">Пробки</div>
+                <div class="info-value" id="trafficDisplay">Умеренные</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Футер с управлением -->
+    <div class="order-footer">
+      <div class="order-info">
+        <div class="info-item">
+          <div class="info-label">Стоимость</div>
+          <div class="info-value price" id="footerPrice">320 ₽</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Время</div>
+          <div class="info-value" id="footerTime">12 мин</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">Расстояние</div>
+          <div class="info-value" id="footerDistance">5.3 км</div>
+        </div>
+      </div>
+      <div class="action-buttons">
+        <button class="action-btn cancel-btn" id="cancelOrder">
+          <i class="fas fa-times"></i>
+          <span>Отменить</span>
+        </button>
+        <button class="action-btn finish-btn" id="endOrder" disabled>
+          <i class="fas fa-check"></i>
+          <span>Завершить</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <!-- Подложка для модального окна -->
+  <div class="modal-overlay" id="modalOverlay"></div>
+  <!-- Стилизованное модальное окно подтверждения отмены -->
+  <div class="cancel-modal" id="cancelModal">
+    <div class="cancel-modal-header">
+      <div class="cancel-modal-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+    </div>
+    <h3 class="cancel-modal-title">Подтверждение отмены</h3>
+    <p class="cancel-modal-text">Вы уверены, что хотите отменить заказ? Это действие нельзя будет отменить.</p>
+    <div class="modal-buttons">
+      <button class="modal-btn no-btn" id="noCancel">
+        <i class="fas fa-times"></i>
+        <span>Нет</span>
+      </button>
+      <button class="modal-btn yes-btn" id="yesCancel">
+        <i class="fas fa-check"></i>
+        <span>Да</span>
+      </button>
+    </div>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Переменные для работы с API
+      const API_BASE_URL = window.location.hostname === 'localhost' ? 
+        'http://localhost:8004' : 'https://taxibarsnz24.ru';
+      
+      // Получаем данные заказа из localStorage
+      const orderData = JSON.parse(localStorage.getItem('activeOrderData'));
+      
+      // Проверка наличия данных заказа
+      if (!orderData || !orderData.orderId) {
+        alert('Нет данных активного заказа. Вернитесь на главную страницу.');
+        window.location.href = 'main.html';
+        return;
+      }
+      
+      // Переменные для работы со страницей
+      const cancelOrderBtn = document.getElementById('cancelOrder');
+      const endOrderBtn = document.getElementById('endOrder');
+      const stepMarkers = document.querySelectorAll('.step-marker');
+      const stepLabels = document.querySelectorAll('.step-label');
+      const progressFill = document.getElementById('progressFill');
+      const statusNotification = document.getElementById('statusNotification');
+      const cancelModal = document.getElementById('cancelModal');
+      const modalOverlay = document.getElementById('modalOverlay');
+      const noCancelBtn = document.getElementById('noCancel');
+      const yesCancelBtn = document.getElementById('yesCancel');
+      let currentStep = 1;
+      let pollInterval;
+
+      // 🔥 ИНИЦИАЛИЗАЦИЯ ДАННЫХ
+      function initializeOrderData() {
+        console.log('🔄 Инициализация данных заказа:', orderData);
+        
+        // Заполняем данными элементы страницы
+        document.getElementById('driverName').textContent = orderData.driverName || 'Водитель';
+        document.getElementById('driverAvatar').textContent = orderData.driverInitials || 
+            (orderData.driverName ? orderData.driverName.charAt(0) : 'В');
+        document.getElementById('carModel').textContent = orderData.carBrand || 'Автомобиль';
+        document.getElementById('carDetails').textContent = 
+            `${orderData.carYear || '—'} г. | ${orderData.carColor || '—'} | ${orderData.carNumber || '—'}`;
+        document.getElementById('pickupAddress').textContent = orderData.pickupAddress || '—';
+        document.getElementById('dropoffAddress').textContent = orderData.dropoffAddress || '—';
+        document.getElementById('passengerCount').textContent = orderData.passengers || '1';
+        
+        // Расчет времени прибытия водителя
+        const etaMatch = (orderData.estimatedTime || '5 минут').match(/(\d+)/);
+        const etaMinutes = etaMatch ? parseInt(etaMatch[1]) : 5;
+        document.getElementById('etaText').textContent = etaMinutes;
+        
+        // Обновляем детали маршрута
+        const distance = orderData.distanceKm || orderData.distance_km || 0;
+        document.getElementById('distanceDisplay').textContent = `${distance} км`;
+        const estimatedTime = orderData.estimatedTime || orderData.estimated_time_min || '15 минут';
+        document.getElementById('timeDisplay').textContent = estimatedTime;
+        document.getElementById('priceDisplay').textContent = `${orderData.price || '—'} ₽`;
+        document.getElementById('trafficDisplay').textContent = 'Умеренные';
+        
+        // Обновляем данные в футере
+        document.getElementById('footerPrice').textContent = `${orderData.price} ₽`;
+        document.getElementById('footerTime').textContent = orderData.estimatedTime || '—';
+        document.getElementById('footerDistance').textContent = `${orderData.distanceKm} км`;
+        
+        // Инициализация рейтинга водителя
+        initializeDriverRating();
+        
+        // Инициализация кнопки сообщения
+        initializeMessageButton();
+      }
+
+      // 🔥 ИНИЦИАЛИЗАЦИЯ РЕЙТИНГА ВОДИТЕЛЯ
+      function initializeDriverRating() {
+        const driverRatingContainer = document.getElementById('driverRatingContainer');
+        const driverRating = orderData.driverRating || 4.8;
+        
+        // Округляем рейтинг до 1 знака после запятой
+        const roundedRating = parseFloat(driverRating.toFixed(1));
+        
+        // Генерируем звезды
+        let starsHTML = '';
+        const fullStars = Math.floor(roundedRating);
+        const hasHalfStar = (roundedRating - fullStars) >= 0.5;
+        
+        // Добавляем полные звезды
+        for (let i = 0; i < fullStars; i++) {
+          starsHTML += '<i class="fas fa-star"></i>';
+        }
+        
+        // Добавляем половинчатую звезду (если нужно)
+        if (hasHalfStar) {
+          starsHTML += '<i class="fas fa-star-half-alt"></i>';
+        }
+        
+        // Добавляем пустые звезды до 5
+        const remainingStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+        for (let i = 0; i < remainingStars; i++) {
+          starsHTML += '<i class="far fa-star"></i>';
+        }
+        
+        // Обновляем контейнер рейтинга
+        driverRatingContainer.innerHTML = `
+          ${starsHTML}
+          <span id="driverRating">${roundedRating}</span>
+        `;
+      }
+
+      // 🔥 ИНИЦИАЛИЗАЦИЯ КНОПКИ СООБЩЕНИЯ
+function initializeMessageButton() {
+  const messageDriverBtn = document.getElementById('messageDriverBtn');
+  
+  messageDriverBtn.addEventListener('click', () => {
+    // Проверяем наличие данных водителя
+    if (!orderData.driverId && !orderData.driverUsername) {
+      showTempNotification('❌ Не удалось найти профиль водителя');
+      return;
+    }
+    
+    let appLink = '';
+    let webLink = '';
+    
+    // Формируем правильные ссылки для открытия Telegram
+    if (orderData.driverUsername) {
+      const cleanUsername = orderData.driverUsername.replace('@', '');
+      appLink = `tg://resolve?domain=${cleanUsername}`;
+      webLink = `https://t.me/${cleanUsername}`;
+    } else if (orderData.driverId && /^\d+$/.test(orderData.driverId)) {
+        appLink = `tg://user?id=${orderData.driverId}`;
+        webLink = `https://web.telegram.org/k/#u${orderData.driverId}`;
+    } else {
+      showTempNotification('❌ Некорректный ID водителя');
+        return;
+      }
+    
+
+    if (!appLink) {
+      showTempNotification('❌ Некорректные данные водителя');
+      return;
+    }
+    
+    // Фиксируем время начала для детектирования успешного открытия приложения
+    const startTime = Date.now();
+    
+    try {
+      // Создаем скрытую iframe для попытки открыть приложение
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+      
+      // Сначала пытаемся открыть приложение через iframe
+      iframe.src = appLink;
+      
+      // Если приложение не открылось в течение 1000мс, переходим к веб-версии
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+        
+        // Проверяем, находится ли пользователь все еще на странице
+        if (Date.now() - startTime < 2000 && !document.hidden) {
+          // Открываем веб-версию в новой вкладке
+          window.open(webLink, '_blank');
+          showTempNotification(`💬 Не удалось открыть приложение. Открываем веб-версию.`);
+        }
+      }, 1000);
+      
+      showTempNotification(`💬 Открываем диалог с ${orderData.driverName}`);
+      
+    } catch (error) {
+      console.error('Ошибка при открытии Telegram:', error);
+      window.open(webLink, '_blank');
+      showTempNotification(`💬 Не удалось открыть приложение. Открываем веб-версию.`);
+    }
+  });
+}
+
+      // 🔥 ОБНОВЛЕНИЕ ПРОГРЕСС-БАРА
+      function updateProgress(step, driverArrived = false) {
+        console.log(`🔄 Обновление прогресса на шаг ${step}, driver_arrived: ${driverArrived}`);
+        
+        currentStep = step;
+        
+        // Обновляем состояние маркеров
+        stepMarkers.forEach((marker, index) => {
+          if (index + 1 < step) {
+            marker.className = 'step-marker completed';
+          } else if (index + 1 === step) {
+            marker.className = 'step-marker active';
+          } else {
+            marker.className = 'step-marker';
+          }
+        });
+        
+        // Обновляем состояние меток
+        stepLabels.forEach((label, index) => {
+          if (index + 1 === step) {
+            label.className = 'step-label active';
+          } else {
+            label.className = 'step-label';
+          }
+        });
+        
+        // Обновляем заполнение прогресс-бара
+        const progressPercent = (step - 1) * 50;
+        progressFill.style.width = `${progressPercent}%`;
+        
+        // Обновление уведомления в зависимости от этапа
+        if (step === 1) {
+          document.getElementById('statusText').innerHTML = `Водитель будет у вас через <b>${document.getElementById('etaText').textContent}</b> минут`;
+          statusNotification.className = 'status-notification waiting';
+          cancelOrderBtn.disabled = false;
+          endOrderBtn.disabled = true;
+        } else if (step === 2) {
+          document.getElementById('statusText').innerHTML = 'Водитель на месте! У вас 5 минут бесплатного ожидания';
+          statusNotification.className = 'status-notification warning';
+          cancelOrderBtn.disabled = true;
+          endOrderBtn.disabled = false;
+        } else if (step === 3) {
+          document.getElementById('statusText').innerHTML = 'Поездка завершена. Спасибо за заказ!';
+          statusNotification.className = 'status-notification success';
+          cancelOrderBtn.disabled = true;
+          endOrderBtn.disabled = true;
+        }
+        
+        console.log(`✅ Прогресс обновлен на шаг ${step}`);
+      }
+
+// 🔥 ОПРОС СТАТУСА ЗАКАЗА
+function startOrderStatusPolling() {
+  console.log('🔄 Запуск опроса статуса заказа...');
+  
+  // Останавливаем предыдущий интервал если есть
+  if (pollInterval) {
+    clearInterval(pollInterval);
+  }
+  
+  pollInterval = setInterval(async () => {
+    try {
+      console.log(`🔄 Опрос статуса заказа ${orderData.orderId}...`);
+      
+      const response = await fetch(`${API_BASE_URL}/api/web/order/${orderData.orderId}`);
+      if (!response.ok) {
+        console.error('❌ Не удалось получить статус заказа:', response.status);
+        return;
+      }
+      
+      const result = await response.json();
+      console.log('📊 Получен ответ от сервера:', result);
+      
+      if (result.success && result.order) {
+        const order = result.order;
+        console.log(`📦 Статус заказа: ${order.status}, driver_arrived: ${order.driver_arrived}, текущий шаг: ${currentStep}`);
+        
+        // Обработка статусов с учетом флага прибытия водителя
+        if (order.status === 'accepted') {
+          // Водитель в пути или ожидает
+          if (order.driver_arrived) {
+            // Водитель прибыл и ожидает
+            if (currentStep !== 2) {
+              updateProgress(2);
+              showTempNotification('✅ Водитель прибыл на место!');
+            }
+          } else {
+            // Водитель в пути
+            if (currentStep !== 1) {
+              updateProgress(1);
+              showTempNotification('🚗 Водитель в пути к вам');
+            }
+          }
+        } else if (order.status === 'completed') {
+          // Заказ завершен
+          if (currentStep !== 3) {
+            updateProgress(3);
+            showTempNotification('🎉 Поездка завершена!');
+            
+
+// СОХРАНЯЕМ ДАННЫЕ ЗАКАЗА ДЛЯ СТРАНИЦЫ ОЦЕНКИ
+            const orderForRating = {
+                orderId: orderData.orderId,
+                driverId: orderData.driverId,
+                driverName: orderData.driverName,
+                driverInitials: orderData.driverInitials,
+                carBrand: orderData.carBrand,
+                carNumber: orderData.carNumber,
+                price: orderData.price,
+                distanceKm: orderData.distanceKm,
+                estimatedTime: orderData.estimatedTime,
+                pickupAddress: orderData.pickupAddress,
+                dropoffAddress: orderData.dropoffAddress,
+                driverRating: orderData.driverRating || 4.8,
+                passengers: orderData.passengers || 1
+            };
+
+            const result = await response.json();
+            if (result.success) {
+                // СОХРАНЯЕМ ДАННЫЕ В LOCALSTORAGE ДЛЯ СТРАНИЦЫ ОЦЕНКИ
+                localStorage.setItem('orderForRating', JSON.stringify(orderForRating));
+                localStorage.removeItem('activeOrderData');
+                saveCompletedOrderToHistory(orderData);
+              }
+
+            // Показываем экран завершения через 4 секунды
+            setTimeout(() => {
+              localStorage.removeItem('activeOrderData');
+              saveCompletedOrderToHistory(orderData);
+              window.location.href = 'rate-driver.html';
+              //showCompletionScreen();
+            }, 4000);
+          }
+        } else if (order.status === 'cancelled') {
+          // Заказ отменен
+          console.log('🔴 Статус: cancelled - заказ отменен');
+          if (pollInterval) {
+            clearInterval(pollInterval);
+          }
+          showCancelScreen();
+        }
+      } else {
+        console.error('❌ Ошибка в ответе сервера:', result);
+      }
+    } catch (error) {
+      console.error('❌ Ошибка при опросе статуса заказа:', error);
+    }
+  }, 3000); // Опрос каждые 3 секунды
+}
+
+      // 🔥 УПРАВЛЕНИЕ МОДАЛЬНЫМ ОКНОМ ОТМЕНЫ
+      function initializeCancelModal() {
+        // Показ модального окна подтверждения отмены
+        cancelOrderBtn.addEventListener('click', () => {
+          cancelModal.classList.add('active');
+          modalOverlay.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        });
+        
+        // Закрытие модального окна при нажатии "Нет" или на оверлей
+        noCancelBtn.addEventListener('click', closeCancelModal);
+        modalOverlay.addEventListener('click', closeCancelModal);
+        
+        function closeCancelModal() {
+          cancelModal.classList.remove('active');
+          modalOverlay.classList.remove('active');
+          document.body.style.overflow = 'auto';
+        }
+        
+        // Обработка подтверждения отмены при нажатии "Да"
+        yesCancelBtn.addEventListener('click', async () => {
+          try {
+            closeCancelModal();
+            
+            if (pollInterval) {
+              clearInterval(pollInterval);
+            }
+            
+            // Отправляем запрос на отмену заказа
+            const response = await fetch(`${API_BASE_URL}/api/web/order/${orderData.orderId}/cancel`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                reason: 'client_cancelled'
+              })
+            });
+            
+            if (!response.ok) {
+              throw new Error(`Ошибка при отмене заказа: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            if (result.success) {
+              localStorage.removeItem('activeOrderData');
+              showCancelScreen();
+            } else {
+              throw new Error(result.message || 'Не удалось отменить заказ');
+            }
+          } catch (error) {
+            console.error('Ошибка при отмене заказа:', error);
+            alert(`Ошибка при отмене заказа: ${error.message}`);
+          }
+        });
+      }
+
+      // 🔥 ОБРАБОТКА ЗАВЕРШЕНИЯ ЗАКАЗА
+function initializeCompleteOrder() {
+    endOrderBtn.addEventListener('click', async () => {
+        try {
+            if (pollInterval) {
+                clearInterval(pollInterval);
+            }
+            
+            // СОХРАНЯЕМ ДАННЫЕ ЗАКАЗА ДЛЯ СТРАНИЦЫ ОЦЕНКИ
+            const orderForRating = {
+                orderId: orderData.orderId,
+                driverId: orderData.driverId,
+                driverName: orderData.driverName,
+                driverInitials: orderData.driverInitials,
+                carBrand: orderData.carBrand,
+                carNumber: orderData.carNumber,
+                price: orderData.price,
+                distanceKm: orderData.distanceKm,
+                estimatedTime: orderData.estimatedTime,
+                pickupAddress: orderData.pickupAddress,
+                dropoffAddress: orderData.dropoffAddress,
+                driverRating: orderData.driverRating || 4.8,
+                passengers: orderData.passengers || 1
+            };
+            
+            // Обновляем прогресс на последний шаг
+            updateProgress(3);
+            
+            // Отправляем запрос на завершение заказа
+            const response = await fetch(`${API_BASE_URL}/api/web/order/${orderData.orderId}/complete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Ошибка при завершении заказа: ${response.status}`);
+            }
+            
+            const result = await response.json();
+            if (result.success) {
+                // СОХРАНЯЕМ ДАННЫЕ В LOCALSTORAGE ДЛЯ СТРАНИЦЫ ОЦЕНКИ
+                localStorage.setItem('orderForRating', JSON.stringify(orderForRating));
+                localStorage.removeItem('activeOrderData');
+                saveCompletedOrderToHistory(orderData);
+                
+                // ПЕРЕНАПРАВЛЯЕМ НА СТРАНИЦУ ОЦЕНКИ
+                window.location.href = 'rate-driver.html';
+            } else {
+                throw new Error(result.message || 'Не удалось завершить заказ');
+            }
+        } catch (error) {
+            console.error('Ошибка при завершении заказа:', error);
+            alert(`Ошибка при завершении заказа: ${error.message}`);
+        }
+    });
+}
+
+      // 🔥 ПЕРЕКЛЮЧАТЕЛЬ ДЕТАЛЕЙ МАРШРУТА
+      function initializeRouteToggle() {
+        const toggleRouteDetails = document.getElementById('toggleRouteDetails');
+        const routeDetails = document.getElementById('routeDetails');
+        let isRouteExpanded = false;
+        
+        toggleRouteDetails.addEventListener('click', () => {
+          isRouteExpanded = !isRouteExpanded;
+          routeDetails.classList.toggle('active', isRouteExpanded);
+          toggleRouteDetails.innerHTML = isRouteExpanded ? 
+            '<i class="fas fa-chevron-up"></i> <span>Скрыть</span>' : 
+            '<i class="fas fa-info-circle"></i> <span>Детали</span>';
+        });
+      }
+
+      // 🔥 ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+      function showTempNotification(message) {
+        const tempNotification = document.createElement('div');
+        tempNotification.className = 'temp-notification';
+        tempNotification.textContent = message;
+        document.body.appendChild(tempNotification);
+        
+        setTimeout(() => {
+          tempNotification.style.animation = 'slideUp 0.3s ease';
+          setTimeout(() => {
+            if (tempNotification.parentNode) {
+              tempNotification.parentNode.removeChild(tempNotification);
+            }
+          }, 300);
+        }, 3000);
+      }
+
+      function saveCompletedOrderToHistory(orderData) {
+        const history = JSON.parse(localStorage.getItem('orderHistory')) || [];
+        const completedOrder = {
+          id: `order_${Date.now()}`,
+          date: new Date().toLocaleDateString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          }),
+          from: orderData.pickupAddress,
+          to: orderData.dropoffAddress,
+          price: `${orderData.price} ₽`,
+          distance: orderData.distanceKm || '—',
+          status: 'completed',
+          driver: orderData.driverName,
+          order_id: orderData.orderId
+        };
+        history.unshift(completedOrder);
+        if (history.length > 10) history.pop();
+        localStorage.setItem('orderHistory', JSON.stringify(history));
+      }
+
+
+// Стилизованный экран подтверждения отмены
+function showCancelScreen() {
+    document.body.innerHTML = `
+    <div class="cancel-screen" style="max-width:480px;width:100%;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.03);margin:10px;">
+        <div style="padding:40px 20px;text-align:center;">
+            <div style="font-size:48px;color:#d32f2f;margin-bottom:20px;">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <h2 style="font-size:24px;font-weight:600;margin-bottom:16px;">Заказ отменен</h2>
+            <p style="font-size:16px;color:#616161;margin-bottom:30px;">Водитель получил уведомление об отмене заказа.</p>
+            <div style="text-align:left;background:#f8f9fa;border-radius:14px;padding:16px;margin-bottom:24px;font-size:14px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                    <span>Номер заказа:</span>
+                    <span style="font-weight:600;">#${orderData.orderId}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;">
+                    <span>Время отмены:</span>
+                    <span>${new Date().toLocaleTimeString('ru-RU')}</span>
+                </div>
+            </div>
+            <button class="action-btn" onclick="location.href='main.html'" 
+                style="background:#000;color:white;padding:16px;border-radius:14px;font-size:16px;font-weight:600;width:100%;border:none;cursor:pointer;">
+                <i class="fas fa-arrow-left"></i>
+                <span>Вернуться на главную</span>
+            </button>
+        </div>
+    </div>
+    <style>
+        body { 
+            background: #f8f9fa; 
+            margin:0; 
+            padding:0; 
+            min-height:100vh; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+        }
+    </style>`;
+}
+
+// Экран отмены заказа
+function showCancelScreenn() {
+    document.body.innerHTML = `
+    <div class="cancel-screen" style="max-width:480px;width:100%;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.03);margin:10px;">
+        <div style="padding:40px 20px;text-align:center;">
+            <div style="font-size:48px;color:#d32f2f;margin-bottom:20px;">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <h2 style="font-size:24px;font-weight:600;margin-bottom:16px;">Заказ отменен</h2>
+            <p style="font-size:16px;color:#616161;margin-bottom:30px;">Водитель получил уведомление об отмене заказа.</p>
+            <div style="text-align:left;background:#f8f9fa;border-radius:14px;padding:16px;margin-bottom:24px;font-size:14px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                    <span>Номер заказа:</span>
+                    <span style="font-weight:600;">#${orderData.orderId}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;">
+                    <span>Время отмены:</span>
+                    <span>${new Date().toLocaleTimeString('ru-RU')}</span>
+                </div>
+            </div>
+            <button class="action-btn" onclick="location.href='main.html'" 
+                style="background:#000;color:white;padding:16px;border-radius:14px;font-size:16px;font-weight:600;width:100%;border:none;cursor:pointer;">
+                <i class="fas fa-arrow-left"></i>
+                <span>Вернуться на главную</span>
+            </button>
+        </div>
+    </div>
+    <style>
+        body { 
+            background: #f8f9fa; 
+            margin:0; 
+            padding:0; 
+            min-height:100vh; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+        }
+    </style>`;
+}
+
+// Экран завершения заказа
+function showCompletionScreen() {
+    document.body.innerHTML = `
+    <div class="review-screen" style="max-width:480px;width:100%;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.03);margin:10px;">
+        <div class="review-header" style="padding:32px 24px 16px;text-align:center;position:relative;">
+            <div class="review-check" style="width:64px;height:64px;border-radius:50%;background:#f0f0f0;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+                <div class="review-check-icon" style="font-size:32px;color:#000;">
+                    <i class="fas fa-check"></i>
+                </div>
+            </div>
+            <h2 class="review-title" style="font-size:24px;font-weight:600;color:#212121;margin-bottom:8px;line-height:1.3;">Спасибо за поездку!</h2>
+            <div class="review-subtitle" style="font-size:15px;font-weight:400;color:#616161;opacity:0.9;max-width:360px;margin:0 auto;">Пожалуйста, оцените качество поездки и водителя. Это поможет нам улучшить сервис.</div>
+        </div>
+        
+        <div class="review-rating" style="padding:24px 20px 0;text-align:center;">
+            <div class="stars-container" style="display:flex;justify-content:center;gap:12px;margin:16px 0;">
+                <i class="fas fa-star star" data-rating="1" style="font-size:28px;color:#e0e0e0;cursor:pointer;"></i>
+                <i class="fas fa-star star" data-rating="2" style="font-size:28px;color:#e0e0e0;cursor:pointer;"></i>
+                <i class="fas fa-star star" data-rating="3" style="font-size:28px;color:#e0e0e0;cursor:pointer;"></i>
+                <i class="fas fa-star star" data-rating="4" style="font-size:28px;color:#e0e0e0;cursor:pointer;"></i>
+                <i class="fas fa-star star" data-rating="5" style="font-size:28px;color:#e0e0e0;cursor:pointer;"></i>
+            </div>
+            <div class="rating-prompt" style="font-size:14px;color:#616161;margin-top:8px;display:block;">Нажмите, чтобы оценить</div>
+        </div>
+        
+        <div class="review-textarea-container" style="padding:0 20px 20px;text-align:center;">
+            <textarea class="review-textarea" placeholder="Ваш отзыв (необязательно)" style="width:100%;max-width:360px;margin:0 auto;padding:14px 16px;border:1px solid #d9d9d9;border-radius:12px;font-size:15px;resize:vertical;min-height:80px;max-height:150px;transition:border-color 0.2s;background:#f8f9fa;"></textarea>
+            <div class="review-hint" style="font-size:13px;color:#616161;margin-top:6px;text-align:center;display:none;">Для оценки ниже 4 звезд комментарий обязателен</div>
+            <div class="error-message" style="font-size:13px;color:#d32f2f;margin-top:6px;text-align:center;display:none;">Пожалуйста, оставьте комментарий для низкой оценки</div>
+        </div>
+        
+        <div class="trip-info" style="background:#f8f9fa;border-radius:14px;padding:18px;margin:0 20px 24px;border:1px solid #d9d9d9;text-align:left;">
+            <div class="trip-info-row" style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #d9d9d9;">
+                <div class="info-label" style="font-size:14px;color:#616161;">Стоимость поездки:</div>
+                <div class="info-value" style="font-size:14px;font-weight:500;color:#212121;">${orderData.price} ₽</div>
+            </div>
+            <div class="trip-info-row" style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #d9d9d9;">
+                <div class="info-label" style="font-size:14px;color:#616161;">Время в пути:</div>
+                <div class="info-value" style="font-size:14px;font-weight:500;color:#212121;">${orderData.estimatedTime || '—'}</div>
+            </div>
+            <div class="trip-info-row" style="display:flex;justify-content:space-between;padding:8px 0;">
+                <div class="info-label" style="font-size:14px;color:#616161;">Расстояние:</div>
+                <div class="info-value" style="font-size:14px;font-weight:500;color:#212121;">${orderData.distanceKm || '—'} км</div>
+            </div>
+        </div>
+        
+        <div class="review-footer" style="padding:16px 24px 24px;border-top:1px solid #d9d9d9;background:#fff;margin-top:auto;">
+            <button class="submit-btn" id="submitReview" style="width:100%;padding:16px;border-radius:12px;background:#000;color:white;font-size:15px;font-weight:500;border:none;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+                <i class="fas fa-paper-plane"></i>
+                <span>ОТПРАВИТЬ ОТЗЫВ</span>
+            </button>
+        </div>
+    </div>
+    <style>
+        body { 
+            background: #f8f9fa; 
+            margin:0; 
+            padding:0; 
+            min-height:100vh; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+        }
+        .star.selected {
+            color: #000;
+        }
+        .review-textarea:focus {
+            outline: none;
+            border-color: #000;
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+        }
+        .review-textarea.error {
+            border-color: #d32f2f;
+        }
+        .submit-btn:disabled {
+            background: #e0e0e0;
+            color: #9e9e9e;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+    </style>`;
+    
+    // Инициализация интерактивных элементов
+    setTimeout(() => {
+        const stars = document.querySelectorAll('.star');
+        const reviewTextarea = document.querySelector('.review-textarea');
+        const reviewHint = document.querySelector('.review-hint');
+        const errorMessage = document.querySelector('.error-message');
+        const submitBtn = document.getElementById('submitReview');
+        let selectedRating = 0;
+        
+        // Обработчики звезд
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                selectedRating = parseInt(star.dataset.rating);
+                
+                // Обновляем отображение звезд
+                stars.forEach((s, index) => {
+                    if (index < selectedRating) {
+                        s.classList.add('selected');
+                        s.style.color = '#000';
+                    } else {
+                        s.classList.remove('selected');
+                        s.style.color = '#e0e0e0';
+                    }
+                });
+                
+                // Показываем подсказку только после выбора рейтинга
+                if (selectedRating < 4) {
+                    reviewHint.style.display = 'block';
+                    document.querySelector('.rating-prompt').style.display = 'none';
+                } else {
+                    reviewHint.style.display = 'none';
+                    document.querySelector('.rating-prompt').style.display = 'none';
+                }
+                
+                validateForm();
+            });
+            
+            // Показываем подсказку о наведении
+            star.addEventListener('mouseenter', () => {
+                stars.forEach((s, index) => {
+                    if (index < parseInt(star.dataset.rating)) {
+                        s.style.color = '#000';
+                    } else {
+                        s.style.color = '#e0e0e0';
+                    }
+                });
+            });
+            
+            // Восстанавливаем предыдущее состояние
+            star.addEventListener('mouseleave', () => {
+                stars.forEach((s, index) => {
+                    if (index < selectedRating) {
+                        s.style.color = '#000';
+                    } else {
+                        s.style.color = '#e0e0e0';
+                    }
+                });
+            });
+        });
+        
+        // Обработка ввода в текстовое поле
+        reviewTextarea.addEventListener('input', validateForm);
+        
+        // Проверка валидности формы
+        function validateForm() {
+            if (selectedRating === 0) {
+                submitBtn.disabled = true;
+                return;
+            }
+            
+            const isRequired = selectedRating < 4;
+            const isCommented = reviewTextarea.value.trim() !== '';
+            
+            if (isRequired && !isCommented) {
+                reviewTextarea.classList.add('error');
+                errorMessage.style.display = 'block';
+                submitBtn.disabled = true;
+            } else {
+                reviewTextarea.classList.remove('error');
+                errorMessage.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        }
+        
+        // Отправка отзыва
+        submitBtn.addEventListener('click', () => {
+            if (submitBtn.disabled) return;
+            
+            // Сохраняем данные в localStorage
+            const reviewData = {
+                orderId: orderData.orderId,
+                rating: selectedRating,
+                comment: reviewTextarea.value.trim(),
+                timestamp: new Date().toISOString()
+            };
+            
+            // Получаем историю отзывов
+            const reviews = JSON.parse(localStorage.getItem('orderReviews')) || [];
+            reviews.unshift(reviewData);
+            if (reviews.length > 10) reviews.pop();
+            localStorage.setItem('orderReviews', JSON.stringify(reviews));
+            
+            // Показываем экран подтверждения
+            document.body.innerHTML = `
+            <div class="confirmation-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 20px;width:100%;height:100%;box-sizing:border-box;max-width:480px;margin:0 auto;position:fixed;top:0;left:0;right:0;bottom:0;background:#fff;z-index:9999;overflow:hidden;">
+                <div style="font-size:64px;color:#2e7d32;margin-bottom:20px;">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h2 style="font-size:24px;font-weight:600;margin-bottom:16px;">Ваш отзыв очень важен для нас!</h2>
+                <div style="font-size:16px;color:#616161;max-width:80%;line-height:1.5;margin:0 auto;">Мы ценим ваше мнение и постоянно работаем над улучшением качества наших услуг.</div>
+            </div>`;
+            
+            // Через 3 секунды возвращаемся на главную
+            setTimeout(() => {
+                location.href = 'main.html';
+            }, 3000);
+        });
+        
+        // Инициализация проверки
+        validateForm();
+    }, 100);
+}
+
+      // 🔥 ИНИЦИАЛИЗАЦИЯ ВСЕГО ПРИЛОЖЕНИЯ
+      function initializeApp() {
+        initializeOrderData();
+        initializeCancelModal();
+        initializeCompleteOrder();
+        initializeRouteToggle();
+        startOrderStatusPolling();
+        
+        console.log('✅ Приложение инициализировано');
+      }
+
+      // Запуск приложения
+      initializeApp();
+    });
+  </script>
+</body>
+</html>

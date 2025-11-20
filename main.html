@@ -1,0 +1,3616 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#000000">
+  <title>Такси Барс</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000">
+<!-- Иконка для iOS (обязательно) -->
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<!-- Запрет масштабирования (опционально, для "приложения") -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<!-- Запуск как полноценное приложение на iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+<!-- Скрыть строку состояния (белая / чёрная) -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+<!-- Название на iOS -->
+  <meta name="apple-mobile-web-app-title" content="Такси Барс">
+  <style>
+    :root {
+      --primary-color: #000;
+      --primary-dark: #1a1a1a;
+      --background-light: #f8f9fa;
+      --background-medium: #f0f0f0;
+      --border-color: #d9d9d9;
+      --text-color: #212121;
+      --text-secondary: #616161;
+      --card-bg: #ffffff;
+      --shadow-light: rgba(0, 0, 0, 0.03);
+      --shadow-medium: rgba(0, 0, 0, 0.08);
+      --shadow-heavy: rgba(0, 0, 0, 0.15);
+      --error-color: #d32f2f;
+      --success-color: #2e7d32;
+      --platinum-color: #e5e4e2;
+      --gold-color: #ffd700;
+      --silver-color: #c0c0c0;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    body {
+      background-color: var(--background-light);
+      color: var(--text-color);
+      line-height: 1.5;
+      padding-bottom: 20px;
+      overflow-x: hidden;
+      position: relative;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 480px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px var(--shadow-light);
+      position: relative;
+      margin: 10px auto;
+      border: 1px solid var(--border-color);
+    }
+    /* Экран загрузки при проверке авторизации */
+    .auth-loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--card-bg);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: opacity 0.3s ease;
+    }
+    .loader-spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-top: 4px solid var(--primary-color);
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    .loader-text {
+      font-size: 18px;
+      color: var(--text-color);
+      font-weight: 500;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    /* Верхнее меню */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      position: relative;
+      z-index: 20;
+    }
+    .menu-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      cursor: pointer;
+      z-index: 30;
+    }
+    .menu-line {
+      width: 100%;
+      height: 2px;
+      background: var(--text-color);
+      border-radius: 2px;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+    .menu-open .menu-line:nth-child(1) {
+      transform: translateY(8px) rotate(45deg);
+    }
+    .menu-open .menu-line:nth-child(2) {
+      opacity: 0;
+    }
+    .menu-open .menu-line:nth-child(3) {
+      transform: translateY(-8px) rotate(-45deg);
+    }
+    .header-title {
+      font-weight: 600;
+      font-size: 18px;
+      color: var(--text-color);
+    }
+    .avatar {
+      width: 36px;
+      height: 36px;
+      background: var(--background-medium);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: pointer;
+      z-index: 30;
+      position: relative;
+      transition: transform 0.2s ease;
+    }
+    .avatar:hover {
+      transform: scale(1.05);
+    }
+    /* Модальное окно профиля */
+    .profile-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.2);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease;
+      z-index: 900;
+    }
+    .profile-modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .profile-modal {
+      position: absolute;
+      right: 16px;
+      top: 56px;
+      width: 260px;
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 4px 20px var(--shadow-heavy);
+      z-index: 950;
+      opacity: 0;
+      transform: scale(0.8);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .profile-modal.active {
+      opacity: 1;
+      transform: scale(1);
+    }
+    .profile-header {
+      padding: 16px;
+      text-align: center;
+      background: linear-gradient(135deg, var(--primary-color) 0%, #333 100%);
+      color: white;
+      border-radius: 16px 16px 0 0;
+    }
+    .profile-avatar {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .profile-name {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: white;
+    }
+    .profile-phone {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    .profile-stats {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      padding: 16px;
+    }
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 80px;
+      padding: 8px;
+    }
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+    .stat-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+    .stat-platinum {
+      color: var(--platinum-color);
+      font-weight: 700;
+    }
+    .stat-gold {
+      color: var(--gold-color);
+      font-weight: 700;
+    }
+    .stat-silver {
+      color: var(--silver-color);
+      font-weight: 700;
+    }
+    .stat-rating {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    /* Карта и остальные стили */
+    .map-container {
+      height: 280px;
+      position: relative;
+      z-index: 1;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .yandex-credits {
+      position: absolute;
+      bottom: 5px;
+      right: 10px;
+      font-size: 10px;
+      color: rgba(0,0,0,0.6);
+      z-index: 5;
+      pointer-events: none;
+    }
+    .map-loader {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--card-bg);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 2;
+      transition: opacity 0.3s ease;
+    }
+    .map-spinner {
+      border: 3px solid rgba(0, 0, 0, 0.1);
+      border-top: 3px solid var(--primary-color);
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin-bottom: 10px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    /* Статус геолокации */
+    .location-status {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      z-index: 5;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+      to { opacity: 1; transform: translateX(-50%) translateY(0); }
+    }
+    /* Адреса */
+    .address-section {
+      padding: 16px;
+      background: var(--card-bg);
+      position: relative;
+      z-index: 15;
+    }
+    .address-container {
+      display: flex;
+      align-items: center;
+      background: var(--card-bg);
+      border-radius: 16px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      box-shadow: 0 2px 8px var(--shadow-light);
+    }
+    .address-field {
+      flex: 1;
+      padding: 12px 16px;
+      position: relative;
+    }
+    .address-field.start {
+      border-right: 1px solid var(--border-color);
+    }
+    .address-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .address-label i {
+      color: var(--primary-color);
+      font-size: 14px;
+    }
+    .address-input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      font-size: 15px;
+      color: var(--text-color);
+      padding: 4px 0;
+      outline: none;
+      font-weight: 500;
+      min-height: 28px;
+      line-height: 1.4;
+      white-space: normal;
+    }
+    .address-input::placeholder {
+      color: var(--text-secondary);
+      font-weight: 400;
+    }
+    .swap-btn {
+      background: none;
+      border: none;
+      color: var(--primary-color);
+      font-size: 18px;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.2s;
+      flex-shrink: 0;
+      margin: 0 8px;
+    }
+    .swap-btn:hover {
+      background: var(--background-light);
+    }
+    .location-error {
+      background: rgba(211, 47, 47, 0.08);
+      border: 1px solid var(--error-color);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin: 12px 0;
+      font-size: 14px;
+      color: var(--error-color);
+      display: none;
+    }
+    .retry-btn {
+      background: var(--error-color);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: opacity 0.2s;
+    }
+    .retry-btn:hover {
+      opacity: 0.9;
+    }
+    /* Новое модальное окно быстрых адресов */
+    .quick-addresses {
+      position: relative;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      z-index: 100;
+      display: none;
+      overflow: hidden;
+      animation: slideDown 0.3s ease;
+      border: 1px solid var(--border-color);
+      margin-top: 4px;
+    }
+    @keyframes slideDown {
+      from { transform: translateY(-10px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    .quick-address-item {
+      padding: 14px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: background 0.2s;
+    }
+    .quick-address-item:last-child {
+      border-bottom: none;
+    }
+    .quick-address-item:hover {
+      background: var(--background-light);
+    }
+    .quick-address-item i {
+      font-size: 20px;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+    .quick-address-item:hover i {
+      color: var(--primary-color);
+    }
+    .quick-address-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .quick-address-title {
+      font-weight: 500;
+      font-size: 15px;
+      color: var(--text-color);
+      display: block;
+    }
+    .quick-address-subtitle {
+      font-size: 13px;
+      color: var(--text-secondary);
+      display: block;
+      margin-top: 2px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .quick-address-item-edit {
+      display: none;
+      padding: 12px 16px;
+      border-top: 1px solid var(--border-color);
+    }
+    .edit-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    .quick-address-item-edit input {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .quick-address-item-edit .edit-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .quick-address-item-edit .edit-buttons button {
+      flex: 1;
+      padding: 6px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .quick-address-item-edit .save-btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+    }
+    .quick-address-item-edit .cancel-btn {
+      background: var(--background-light);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+    }
+    /* Пассажиры */
+    .passengers-section {
+      padding: 16px;
+      background: var(--background-light);
+      border-bottom: 1px solid var(--border-color);
+    }
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-color);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .section-title i {
+      color: var(--primary-color);
+      font-size: 16px;
+    }
+    .passengers-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .passenger-btn {
+      height: 48px;
+      background: white;
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .passenger-btn:hover:not(.active) {
+      background: var(--background-medium);
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px var(--shadow-light);
+    }
+    .passenger-btn.active {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.12);
+    }
+    .passenger-btn.active:hover {
+      background: var(--primary-dark);
+    }
+    /* Информация */
+    .info-section {
+      padding: 24px;
+      text-align: center;
+    }
+    .info-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 16px 0;
+      text-align: left;
+    }
+    .info-icon {
+      width: 24px;
+      height: 24px;
+      background: var(--background-medium);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary-color);
+    }
+    .info-text {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    .price-container {
+      display: flex;
+      justify-content: space-between;
+      margin: 20px 0;
+    }
+    .price-placeholder, .distance-placeholder {
+      width: 100px;
+      height: 36px;
+      background: rgba(0, 0, 0, 0.03);
+      border-radius: 8px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+    }
+    .price-placeholder::after, .distance-placeholder::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0,0,0,0.05), transparent);
+      animation: shimmer 1.5s infinite;
+    }
+    @keyframes shimmer {
+      100% { left: 100%; }
+    }
+    .placeholder-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 8px;
+      opacity: 0.7;
+    }
+    .price-value, .distance-value {
+      font-size: 24px;
+      color: var(--primary-color);
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .distance-value {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    .route-details {
+      background: var(--background-light);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-top: 8px;
+      color: var(--text-color);
+      display: none;
+    }
+    .route-details.info {
+      background: #f8f9fa;
+      color: #212121;
+      text-align: center;
+    }
+    .route-details.error {
+      color: #d32f2f;
+      background-color: rgba(211, 47, 47, 0.1);
+    }
+    /* Комментарий */
+    .comment-section {
+      padding: 0 24px;
+      margin-bottom: 20px;
+    }
+    .comment-trigger {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+      padding: 8px 0;
+      width: fit-content;
+      transition: color 0.2s;
+    }
+    .comment-trigger:hover {
+      color: var(--primary-color);
+    }
+    .comment-input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      margin-top: 8px;
+      font-size: 14px;
+      display: none;
+      min-height: 80px;
+      resize: vertical;
+    }
+    .comment-input.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    .quick-comments {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 0 24px;
+    }
+    .quick-comments.active {
+      display: flex;
+    }
+    .quick-comment-btn {
+      background: var(--background-light);
+      border: 1px solid var(--border-color);
+      border-radius: 50px;
+      padding: 6px 14px;
+      font-size: 13px;
+      color: var(--text-color);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .quick-comment-btn:hover, .quick-comment-btn.active {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+    /* Кнопка заказа */
+    .rent-button {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 16px;
+      border-radius: 16px;
+      width: 100%;
+      font-weight: 600;
+      font-size: 16px;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-transform: uppercase;
+    }
+    .rent-button:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    }
+    .rent-button:disabled {
+      background: var(--background-medium);
+      color: var(--text-secondary);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    /* Боковое меню */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -300px;
+      width: 280px;
+      height: 100vh;
+      background: var(--card-bg);
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+      transition: left 0.3s ease;
+      z-index: 100;
+      padding-top: 60px;
+    }
+    .sidebar.active {
+      left: 0;
+    }
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease;
+      z-index: 99;
+    }
+    .sidebar-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .sidebar-item {
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .sidebar-item:hover {
+      background: var(--background-light);
+    }
+    .sidebar-item i {
+      font-size: 20px;
+      color: var(--text-color);
+    }
+    .sidebar-item.active {
+      border-left: 3px solid var(--primary-color);
+      background: var(--background-light);
+    }
+    .sidebar-footer {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
+      padding: 0 24px;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 14px;
+      border-top: 1px solid var(--border-color);
+      padding-top: 16px;
+      margin-top: 16px;
+    }
+    /* Модальное окно выбора водителя */
+    .driver-modal {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-radius: 16px 16px 0 0;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+      padding: 24px;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      z-index: 1000;
+      max-width: 480px;
+      margin: 0 auto;
+      border-top: 1px solid var(--border-color);
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .driver-modal.active {
+      transform: translateY(0);
+    }
+    .driver-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .driver-modal-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-color);
+      margin: 0;
+    }
+    .driver-modal-timer {
+      font-size: 14px;
+      color: var(--text-secondary);
+      background: var(--background-light);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 500;
+    }
+    .drivers-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .driver-card {
+      display: flex;
+      align-items: center;
+      padding: 16px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      transition: box-shadow 0.2s;
+    }
+    .driver-card:hover {
+      box-shadow: 0 2px 6px var(--shadow-medium);
+    }
+    .driver-card-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-color) 0%, #333 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 20px;
+      flex-shrink: 0;
+      margin-right: 16px;
+    }
+    .driver-card-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .driver-card-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 4px;
+    }
+    .driver-card-rating {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+      color: var(--text-color);
+      margin-bottom: 6px;
+    }
+    .driver-card-rating i {
+      color: #ffc107;
+    }
+    .driver-card-rating span {
+      color: var(--text-secondary);
+      margin-left: 4px;
+    }
+    .driver-car {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    .driver-select-btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    .driver-select-btn:hover {
+      background: var(--primary-dark);
+    }
+    /* Модальное окно истории заказов */
+    .history-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease;
+      z-index: 900;
+    }
+    .history-modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .history-modal {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-radius: 16px 16px 0 0;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+      padding: 24px;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      z-index: 1000;
+      max-width: 480px;
+      margin: 0 auto;
+      border-top: 1px solid var(--border-color);
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .history-modal.active {
+      transform: translateY(0);
+    }
+    .history-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .history-modal-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-color);
+      margin: 0;
+    }
+    .history-modal-close {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 20px;
+      cursor: pointer;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+    .history-modal-close:hover {
+      background: var(--background-light);
+    }
+    .history-orders {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .history-order-item {
+      padding: 16px;
+      background: var(--card-bg);
+      border-radius: 14px;
+      border: 1px solid var(--border-color);
+      transition: box-shadow 0.2s;
+    }
+    .history-order-item:hover {
+      box-shadow: 0 2px 6px var(--shadow-medium);
+    }
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .order-date {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .order-status {
+      font-size: 13px;
+      font-weight: 500;
+      padding: 4px 8px;
+      border-radius: 8px;
+    }
+    .status-completed {
+      background: rgba(46, 125, 50, 0.1);
+      color: var(--success-color);
+    }
+    .status-canceled {
+      background: rgba(211, 47, 47, 0.1);
+      color: var(--error-color);
+    }
+    .route-info {
+      margin-bottom: 12px;
+    }
+    .route-point {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+    .route-point i {
+      color: var(--primary-color);
+      font-size: 16px;
+    }
+    .order-details {
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+      margin-top: 12px;
+    }
+    .order-price {
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+    .repeat-btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .repeat-btn:hover {
+      background: var(--primary-dark);
+    }
+    .empty-history {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-secondary);
+    }
+    .empty-history i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.3;
+    }
+    /* Лоадер */
+    .loader {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 12px;
+      z-index: 1000;
+      font-size: 16px;
+      font-weight: 500;
+      display: none;
+    }
+    .loader.active {
+      display: block;
+    }
+    /* Модальное окно поиска водителя */
+    .search-driver-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease;
+      z-index: 900;
+    }
+    .search-driver-modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+    .search-driver-modal {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-radius: 16px 16px 0 0;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+      padding: 24px;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      z-index: 1000;
+      max-width: 480px;
+      margin: 0 auto;
+      border-top: 1px solid var(--border-color);
+      text-align: center;
+    }
+    .search-driver-modal.active {
+      transform: translateY(0);
+    }
+    .search-driver-modal-content {
+      padding: 20px;
+    }
+    .search-spinner {
+      border: 4px solid rgba(0, 0, 0, 0.1);
+      border-top: 4px solid var(--primary-color);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 20px;
+      animation: spin 1s linear infinite;
+    }
+    .search-driver-modal h3 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 12px;
+    }
+    .search-driver-modal p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+    .search-timer {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 24px;
+      color: var(--text-color);
+    }
+    .cancel-search-btn {
+      background: var(--error-color);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      width: 100%;
+    }
+    .cancel-search-btn:hover {
+      background: #b71c1c;
+    }
+    /* Стили для установки маркера на карте */
+    .marker-set-btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      margin-left: 8px;
+      font-size: 14px;
+      transition: background 0.2s;
+      flex-shrink: 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .marker-set-btn:hover {
+      background: var(--primary-dark);
+      transform: scale(1.05);
+    }
+    .marker-set-mode #map {
+      cursor: crosshair !important;
+    }
+    .marker-set-indicator {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      z-index: 100;
+      display: none;
+      pointer-events: none;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(-50%) scale(0.9); }
+      to { opacity: 1; transform: translateX(-50%) scale(1); }
+    }
+    @keyframes fadeOut {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @media (max-width: 480px) {
+      .container {
+        margin: 5px;
+        border-radius: 14px;
+      }
+      .passenger-btn {
+        height: 42px;
+        font-size: 14px;
+      }
+      @keyframes fadeInOut {
+        0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+        10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+        90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+        100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+      }
+      @keyframes fadeOut {
+        0% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Экран загрузки при проверке авторизации -->
+  <div class="auth-loader" id="authLoader">
+    <div class="loader-spinner"></div>
+    <div class="loader-text">Проверка авторизации...</div>
+  </div>
+  <!-- Индикатор режима установки маркера -->
+  <div class="marker-set-indicator" id="markerSetIndicator">Выберите точку на карте</div>
+  <!-- Основной контент (изначально скрыт) -->
+  <div class="container" id="mainContainer" style="display: none;">
+    <!-- Верхнее меню -->
+    <div class="header">
+      <div class="menu-icon" id="menuToggle">
+        <span class="menu-line"></span>
+        <span class="menu-line"></span>
+        <span class="menu-line"></span>
+      </div>
+      <div class="header-title">Карта</div>
+      <div class="avatar" id="profileAvatar">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24'%3E%3Cpath fill='%23888' d='M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6 3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E" alt="User" id="userAvatar">
+      </div>
+    </div>
+    <!-- Статус геолокации -->
+    <div class="location-status" id="locationStatus"></div>
+    <!-- Карта -->
+    <div class="map-container">
+      <div class="map-loader" id="mapLoader">
+        <div class="map-spinner"></div>
+        <div>Загрузка карты...</div>
+      </div>
+      <div id="map"></div>
+      <div class="yandex-credits">Данные © Яндекс</div>
+    </div>
+    <!-- Адреса -->
+    <div class="address-section">
+      <div class="location-error" id="locationError">
+        <div>Не удалось определить ваше местоположение</div>
+        <button class="retry-btn" id="retryLocation">Повторить попытку</button>
+      </div>
+      <div class="address-container">
+        <div class="address-field start">
+          <div class="address-label">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>Откуда</span>
+          </div>
+          <div style="display: flex; align-items: center;">
+            <input 
+              type="text" 
+              id="startAddress" 
+              class="address-input" 
+              placeholder="Ваше местоположение"
+              value=""
+              autocomplete="off"
+              style="flex: 1;"
+            >
+            <button class="marker-set-btn" id="setStartMarkerBtn" title="Указать на карте">
+              <i class="fas fa-map-marker-alt"></i>
+            </button>
+          </div>
+          <input type="hidden" id="startAddressFull" value="">
+        </div>
+        <button class="swap-btn" id="swapAddresses">
+          <i class="fas fa-exchange-alt"></i>
+        </button>
+        <div class="address-field end">
+          <div class="address-label">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>Куда</span>
+          </div>
+          <div style="display: flex; align-items: center;">
+            <input 
+              type="text" 
+              id="endAddress" 
+              class="address-input" 
+              placeholder="Пункт назначения"
+              value=""
+              autocomplete="off"
+              style="flex: 1;"
+            >
+            <button class="marker-set-btn" id="setEndMarkerBtn" title="Указать на карте">
+              <i class="fas fa-map-marker-alt"></i>
+            </button>
+          </div>
+          <input type="hidden" id="endAddressFull" value="">
+        </div>
+      </div>
+      <!-- Новое модальное окно быстрых адресов -->
+      <div class="quick-addresses" id="quickAddresses">
+        <div class="quick-address-item" data-address="current-location">
+          <i class="fas fa-location-arrow"></i>
+          <div class="quick-address-content">
+            <span class="quick-address-title">Моё местоположение</span>
+            <span class="quick-address-subtitle" id="current-location-subtitle">Определение...</span>
+          </div>
+        </div>
+        <div class="quick-address-item" data-address="home">
+          <i class="fas fa-home"></i>
+          <div class="quick-address-content">
+            <span class="quick-address-title">Дом</span>
+            <span class="quick-address-subtitle" id="home-subtitle">Не установлен</span>
+          </div>
+        </div>
+        <div class="quick-address-item" data-address="work">
+          <i class="fas fa-briefcase"></i>
+          <div class="quick-address-content">
+            <span class="quick-address-title">Работа</span>
+            <span class="quick-address-subtitle" id="work-subtitle">Не установлен</span>
+          </div>
+        </div>
+        <div class="quick-address-item-edit" id="addressEditContainer">
+          <div class="edit-title" id="editTitle">Редактирование адреса</div>
+          <input type="text" id="addressEditInput" placeholder="Введите адрес">
+          <div class="edit-buttons">
+            <button class="cancel-btn">Отмена</button>
+            <button class="save-btn">Сохранить</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Пассажиры -->
+    <div class="passengers-section">
+      <div class="section-title">
+        <i class="fas fa-users"></i>
+        Пассажиры
+      </div>
+      <div class="passengers-grid">
+        <button class="passenger-btn active" data-passengers="1">1</button>
+        <button class="passenger-btn" data-passengers="2">2</button>
+        <button class="passenger-btn" data-passengers="3">3</button>
+        <button class="passenger-btn" data-passengers="4">4</button>
+        <button class="passenger-btn" data-passengers="5">5+</button>
+      </div>
+    </div>
+    <!-- Информация -->
+    <div class="info-section">
+      <div class="info-row">
+        <div class="info-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="6" x2="12" y2="12"></line>
+            <line x1="12" y1="12" x2="16" y2="16"></line>
+          </svg>
+        </div>
+        <div class="info-text">
+          <div>Время в пути</div>
+          <div><span id="estimatedTime">Рассчитывается</span></div>
+        </div>
+      </div>
+      <div class="price-container">
+        <div class="price-placeholder">
+          <div class="placeholder-label">Стоимость</div>
+        </div>
+        <div class="distance-placeholder">
+          <div class="placeholder-label">Расстояние</div>
+        </div>
+      </div>
+      <div id="calculated-values" style="display:none;">
+        <div class="price-container">
+          <div class="price-value" id="priceDisplay">— ₽</div>
+          <div class="distance-value" id="distanceDisplay">— км</div>
+        </div>
+      </div>
+      <div class="route-details" id="routeDetails">Пробки: умеренные • Время без пробок: 12 мин</div>
+    </div>
+    <!-- Комментарий -->
+    <div class="comment-section">
+      <div class="comment-trigger" id="commentTrigger">
+        <i class="fas fa-comment-alt"></i>
+        Добавить комментарий для водителя
+      </div>
+      <textarea 
+        class="comment-input" 
+        id="orderComment" 
+        placeholder="Например: подъезд со двора, встречайте с табличкой или нужна детское кресло"
+        rows="3"
+      ></textarea>
+      <div class="quick-comments" id="quickComments">
+        <button class="quick-comment-btn" data-comment="Нужен заезд во двор">
+          <i class="fas fa-building"></i>
+          Во двор
+        </button>
+        <button class="quick-comment-btn" data-comment="Нужно детское кресло">
+          <i class="fas fa-child"></i>
+          Кресло
+        </button>
+        <button class="quick-comment-btn" data-comment="Встреча с табличкой">
+          <i class="fas fa-sign"></i>
+          Табличка
+        </button>
+        <button class="quick-comment-btn" data-comment="Большой багаж">
+          <i class="fas fa-suitcase"></i>
+          Багаж
+        </button>
+      </div>
+    </div>
+    <!-- Кнопка -->
+    <div style="padding: 0 24px 24px;">
+      <button class="rent-button" id="orderButton" disabled>ЗАКАЗАТЬ</button>
+    </div>
+  </div>
+  <!-- Боковое меню -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-item active" data-action="history">
+      <i class="fas fa-history"></i>
+      <span>История заказов</span>
+    </div>
+    <div class="sidebar-item" data-action="promo">
+      <i class="fas fa-tag"></i>
+      <span>Промокоды</span>
+    </div>
+    <div class="sidebar-item" data-action="support">
+      <i class="fas fa-headset"></i>
+      <span>Поддержка</span>
+    </div>
+    <div class="sidebar-item" data-action="logout">
+      <i class="fas fa-sign-out-alt"></i>
+      <span>Выход</span>
+    </div>
+    <div class="sidebar-footer">
+      Версия 1.8.0 • ВашиТакси
+    </div>
+  </div>
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <!-- Модальное окно поиска водителя -->
+  <div class="search-driver-modal-overlay" id="searchDriverModalOverlay"></div>
+  <div class="search-driver-modal" id="searchDriverModal">
+    <div class="search-driver-modal-content">
+      <div class="search-spinner"></div>
+      <h3>Поиск водителей</h3>
+      <p>Ищем ближайших водителей для вашего заказа</p>
+      <div class="search-timer">
+        <span>Время на поиск: </span>
+        <span id="searchTimerValue">03:00</span>
+      </div>
+      <button class="cancel-search-btn" id="cancelSearchBtn">Отменить поиск</button>
+    </div>
+  </div>
+  <!-- Модальное окно выбора водителя -->
+  <div class="driver-modal" id="driverModal">
+    <div class="driver-modal-header">
+      <h3 class="driver-modal-title">Выберите водителя</h3>
+      <div class="driver-modal-timer" id="driverTimer">Осталось: <span id="timerValue">02:00</span></div>
+    </div>
+    <div class="drivers-list"></div>
+  </div>
+  <!-- Модальное окно профиля -->
+  <div class="profile-modal-overlay" id="profileModalOverlay"></div>
+  <div class="profile-modal" id="profileModal">
+    <div class="profile-header">
+      <div class="profile-avatar">И</div>
+      <div class="profile-name">Иван Петров</div>
+      <div class="profile-phone">+7 (999) 123-45-67</div>
+    </div>
+    <div class="profile-stats">
+      <div class="stat-item">
+        <span class="stat-label">Статус</span>
+        <span class="stat-value stat-platinum">Платина</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Заказы</span>
+        <span class="stat-value stat-orders">24</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Рейтинг</span>
+        <div class="stat-value stat-rating">
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star"></i>
+          <i class="fas fa-star-half-alt"></i>
+          <span style="margin-left: 4px;">4.7</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Модальное окно истории заказов -->
+  <div class="history-modal-overlay" id="historyModalOverlay"></div>
+  <div class="history-modal" id="historyModal">
+    <div class="history-modal-header">
+      <h3 class="history-modal-title">История заказов</h3>
+      <button class="history-modal-close" id="historyModalClose">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="history-orders" id="historyOrdersContainer">
+      <!-- Здесь будет отображаться история заказов -->
+    </div>
+  </div>
+  <div class="loader" id="routeLoader">Рассчитываем маршрут...</div>
+  <!-- Подключение Яндекс.Карт -->
+  <script src="https://api-maps.yandex.ru/2.1/?apikey=d62a52d9-1485-41e8-a4af-439caa66c9e3&lang=ru_RU" type="text/javascript"></script>
+ <script>
+ // ======================
+// СИСТЕМА АВТОРИЗАЦИИ И ПРОВЕРКИ АКТИВНОГО ЗАКАЗА
+// ======================
+function checkAuth() {
+    const authLoader = document.getElementById('authLoader');
+    const mainContainer = document.getElementById('mainContainer');
+    const userData = localStorage.getItem('tg_user');
+    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+    const sessionExpiry = localStorage.getItem('sessionExpiry');
+    // Проверяем срок действия сессии
+    if (sessionExpiry && Date.now() > parseInt(sessionExpiry)) {
+        clearAuthData();
+        console.log('Сессия истекла, требуется повторная авторизация');
+        window.location.href = 'login.html';
+        return;
+    }
+    // Проверяем авторизацию
+    if (!userData || !isLoggedIn) {
+        clearAuthData();
+        console.log('Пользователь не авторизован');
+        window.location.href = 'login.html';
+        return;
+    }
+    // Показываем лоадер и проверяем активные заказы
+    authLoader.querySelector('.loader-text').textContent = 'Проверка активных заказов...';
+    authLoader.style.opacity = '1';
+    authLoader.style.display = 'flex';
+    // Проверяем активный заказ
+    checkActiveOrder().then(hasActiveOrder => {
+        if (!hasActiveOrder) {
+            // Если активного заказа нет, показываем основной интерфейс
+            setTimeout(() => {
+                authLoader.style.opacity = '0';
+                setTimeout(() => {
+                    authLoader.style.display = 'none';
+                    mainContainer.style.display = 'block';
+                    // Инициализируем приложение и интеграцию
+                    setTimeout(() => {
+                        initIntegration();
+                        initApp();
+                    }, 300);
+                }, 300);
+            }, 500);
+        }
+    });
+}
+// Показ уведомления о восстановлении заказа
+function showRecoveryNotification(orderData) {
+    // Создаем уведомление
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #4CAF50;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      z-index: 10000;
+      font-weight: 500;
+      animation: fadeInOut 3s forwards;
+    `;
+    notification.innerHTML = `
+      <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
+      Восстановлен активный заказ #${orderData.orderId}
+    `;
+    document.body.appendChild(notification);
+    // Анимация появления и исчезания
+    setTimeout(() => {
+        notification.style.animation = 'fadeOut 1s forwards';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+            // Перенаправляем на страницу активного заказа
+            window.location.href = 'active-order.html';
+        }, 1000);
+    }, 2000);
+}
+// Проверка наличия активного заказа
+async function checkActiveOrder() {
+    const userData = JSON.parse(localStorage.getItem('tg_user'));
+    if (!userData) return false;
+    try {
+        const API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:8004' 
+            : 'https://taxibarsnz24.ru';
+        const response = await fetch(`${API_BASE_URL}/api/web/user/${userData.id}/active-order`, {
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`Ошибка сервера: ${response.status}`);
+        }
+        const data = await response.json();
+        if (data.success && data.order && data.order.status === 'accepted') {
+            console.log('Найден активный заказ:', data.order);
+            // 🔥 Получаем резервные данные из localStorage если сервер вернул дефолтные значения
+            let distanceKm = data.order.distance_km;
+            let estimatedTime = data.order.estimated_time_min;
+            // Если данные по умолчанию - пытаемся найти резервные
+            if (distanceKm === 0 || distanceKm === null || distanceKm === undefined) {
+                const tempData = localStorage.getItem('last_order_data');
+                if (tempData) {
+                    try {
+                        const parsedData = JSON.parse(tempData);
+                        if (parsedData.distance_km && parsedData.distance_km > 0) {
+                            distanceKm = parsedData.distance_km;
+                            console.log('✅ Использованы резервные данные расстояния:', distanceKm);
+                        }
+                    } catch (e) {
+                        console.error('Ошибка парсинга резервных данных:', e);
+                    }
+                }
+            }
+            if (estimatedTime === "15 минут" || estimatedTime === null || estimatedTime === undefined) {
+                const tempData = localStorage.getItem('last_order_data');
+                if (tempData) {
+                    try {
+                        const parsedData = JSON.parse(tempData);
+                        if (parsedData.estimated_time_min && parsedData.estimated_time_min !== "15 минут") {
+                            estimatedTime = parsedData.estimated_time_min;
+                            console.log('✅ Использованы резервные данные времени:', estimatedTime);
+                        }
+                    } catch (e) {
+                        console.error('Ошибка парсинга резервных данных времени:', e);
+                    }
+                }
+            }
+            // Формируем данные для страницы активного заказа
+            const activeOrderData = {
+                orderId: data.order.id,
+                driverName: data.order.driver_name || 'Водитель',
+                driverInitials: data.order.driver_name ? data.order.driver_name.charAt(0).toUpperCase() : 'В',
+                driverId: data.order.driver_id,
+                driverUsername: data.order.driver_username || null,
+                carBrand: data.order.car_brand || 'Автомобиль',
+                carNumber: data.order.car_number || '',
+                carYear: data.order.car_year || '2023',
+                carColor: data.order.car_color || 'Серебристый',
+                pickupAddress: data.order.pickup_address,
+                dropoffAddress: data.order.dropoff_address,
+                price: data.order.price,
+                distanceKm: distanceKm || 0,
+                estimatedTime: estimatedTime || '15 минут',
+                passengers: data.order.passengers || 1,
+                driverRating: parseFloat(data.order.driver_rating) || 4.8,
+                status: data.order.status,
+                createdAt: data.order.created_at,
+                pickupCoordinates: data.order.pickup_coordinates,
+                dropoffCoordinates: data.order.dropoff_coordinates,
+                driverCoordinates: data.order.driver_coordinates
+            };
+            // Сохраняем данные в localStorage
+            localStorage.setItem('activeOrderData', JSON.stringify(activeOrderData));
+            // Показываем уведомление о восстановлении заказа
+            showRecoveryNotification(activeOrderData);
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error('Ошибка при проверке активного заказа:', error);
+        return false;
+    }
+}
+  function clearAuthData() {
+    localStorage.removeItem('tg_user');
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('sessionExpiry');
+    localStorage.removeItem('activeOrderData');
+  }
+  function logout() {
+    clearAuthData();
+    alert('Вы успешно вышли из системы');
+    window.location.href = 'login.html';
+  }
+  // ======================
+  // ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
+  // ======================
+  function initApp() {
+    const userData = JSON.parse(localStorage.getItem('tg_user'));
+    if (userData) {
+      document.querySelector('.profile-name').textContent = 
+        userData.first_name + (userData.last_name ? ' ' + userData.last_name : '');
+      document.querySelector('.profile-phone').textContent = 
+        userData.username ? `@${userData.username}` : (userData.phone || 'Нет данных');
+      const mainAvatarImg = document.getElementById('userAvatar');
+      const mainAvatarFallback = document.createElement('div');
+      mainAvatarFallback.className = 'avatar-fallback';
+      mainAvatarFallback.style.cssText = `
+        position: absolute;
+        inset: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #000 0%, #333 100%);
+        color: white;
+        font-weight: bold;
+        border-radius: 50%;
+        font-size: 16px;
+      `;
+      document.querySelector('.avatar').appendChild(mainAvatarFallback);
+      if (userData.photo_url) {
+        mainAvatarImg.src = userData.photo_url;
+        mainAvatarImg.style.display = 'block';
+        mainAvatarFallback.style.display = 'none';
+      } else {
+        const initials = userData.first_name.charAt(0) + (userData.last_name ? userData.last_name.charAt(0) : '');
+        mainAvatarFallback.textContent = initials;
+        mainAvatarImg.style.display = 'none';
+        mainAvatarFallback.style.display = 'flex';
+      }
+    }
+    document.querySelector('[data-action="logout"]').addEventListener('click', function() {
+      sidebar.classList.remove('active');
+      sidebarOverlay.classList.remove('active');
+      menuToggle.classList.remove('menu-open');
+      logout();
+    });
+    setupEventListeners();
+    setupMenu();
+    setupPassengerSelection();
+    setupQuickComments();
+    setupCommentField();
+    setupSwapAddresses();
+    setupInputSelectAll();
+    setupMarkerSetButtons();
+    ymaps.ready(() => {
+      initMap([56.013263, 90.417379]);
+      getCurrentLocation()
+        .then(coords => {
+          currentLocation = coords;
+          determineCity(coords).then(city => {
+            currentUserCity = city;
+            updateLocation(coords);
+            updateQuickAddressSubtitles();
+          });
+        })
+        .catch(error => {
+          console.error('Ошибка получения текущего местоположения:', error);
+          currentUserCity = { name: 'Назарово', bounds: [[56.3823, 95.4500], [56.4023, 95.4700]] };
+          updateQuickAddressSubtitles();
+        });
+    });
+    setInterval(checkSessionExpiry, 60000);
+    console.log('Приложение успешно инициализировано');
+  }
+  function checkSessionExpiry() {
+    const sessionExpiry = localStorage.getItem('sessionExpiry');
+    if (sessionExpiry && Date.now() > parseInt(sessionExpiry)) {
+      clearAuthData();
+      window.location.href = 'login.html';
+    }
+  }
+  // ======================
+  // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ДЛЯ УСТАНОВКИ МАРКЕРА
+  // ======================
+  let markerSetMode = null; // null, 'start' или 'end'
+
+  // ======================
+  // КОНФИГУРАЦИЯ
+  // ======================
+  const CONFIG = {
+    YANDEX_API_KEY: "d62a52d9-1485-41e8-a4af-439caa66c9e3",
+    PRICE_PER_KM: {
+      default: 35,
+      moscow: 45,
+      spb: 40,
+      ekaterinburg: 38,
+      krasnoyarsk: 32,
+      novosibirsk: 36
+    },
+    EXTRA_PASSENGER_FEE: 50,
+    MIN_PRICE: 150,
+    DEBOUNCE_DELAY: 300
+  };
+  // ======================
+  // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ
+  // ======================
+  let ymap, route, isRouteCalculated = false, currentLocation = null, passengerCount = 1;
+  let currentUserCity = { name: 'Назарово', bounds: [[56.3823, 95.4500], [56.4023, 95.4700]] };
+  // Добавляем новую переменную для отслеживания готовности маршрута
+  let isRouteReady = false;
+  const quickAddresses = {
+    home: localStorage.getItem('quickAddressHome') || '',
+    work: localStorage.getItem('quickAddressWork') || ''
+  };
+  // Глобальные переменные для модальных окон
+  let isProfileModalOpen = false;
+  let isHistoryModalOpen = false;
+  let isSearchModalOpen = false;
+  let isDriverModalOpen = false;
+  // DOM элементы
+  const mapLoader = document.getElementById('mapLoader');
+  const startInput = document.getElementById('startAddress');
+  const endInput = document.getElementById('endAddress');
+  const startInputFull = document.getElementById('startAddressFull');
+  const endInputFull = document.getElementById('endAddressFull');
+  const orderButton = document.getElementById('orderButton');
+  const routeDetails = document.getElementById('routeDetails');
+  const locationStatus = document.getElementById('locationStatus');
+  const locationError = document.getElementById('locationError');
+  const retryLocationBtn = document.getElementById('retryLocation');
+  const passengerButtons = document.querySelectorAll('.passenger-btn');
+  const quickComments = document.getElementById('quickComments');
+  const commentInput = document.getElementById('orderComment');
+  const commentTrigger = document.getElementById('commentTrigger');
+  const calculatedValues = document.getElementById('calculated-values');
+  const sidebar = document.getElementById('sidebar');
+  const sidebarOverlay = document.getElementById('sidebarOverlay');
+  const menuToggle = document.getElementById('menuToggle');
+  const swapAddressesBtn = document.getElementById('swapAddresses');
+  const driverModal = document.getElementById('driverModal');
+  const timerValue = document.getElementById('timerValue');
+  const routeLoader = document.getElementById('routeLoader');
+  const quickAddressesContainer = document.getElementById('quickAddresses');
+  const addressEditContainer = document.getElementById('addressEditContainer');
+  const addressEditInput = document.getElementById('addressEditInput');
+  const addressEditSaveBtn = document.querySelector('.save-btn');
+  const addressEditCancelBtn = document.querySelector('.cancel-btn');
+  const currentLocationSubtitle = document.getElementById('current-location-subtitle');
+  const homeSubtitle = document.getElementById('home-subtitle');
+  const workSubtitle = document.getElementById('work-subtitle');
+  const editTitleElement = document.getElementById('editTitle');
+  const profileAvatar = document.getElementById('profileAvatar');
+  const profileModal = document.getElementById('profileModal');
+  const profileModalOverlay = document.getElementById('profileModalOverlay');
+  const historyModal = document.getElementById('historyModal');
+  const historyModalOverlay = document.getElementById('historyModalOverlay');
+  const historyModalClose = document.getElementById('historyModalClose');
+  const historyOrdersContainer = document.getElementById('historyOrdersContainer');
+  // Новые элементы для модального окна поиска
+  const searchDriverModal = document.getElementById('searchDriverModal');
+  const searchDriverModalOverlay = document.getElementById('searchDriverModalOverlay');
+  const searchTimerValue = document.getElementById('searchTimerValue');
+  const cancelSearchBtn = document.getElementById('cancelSearchBtn');
+  const markerSetIndicator = document.getElementById('markerSetIndicator');
+  const setStartMarkerBtn = document.getElementById('setStartMarkerBtn');
+  const setEndMarkerBtn = document.getElementById('setEndMarkerBtn');
+
+  let driverTimerInterval = null;
+  let timeLeft = 120;
+  let startMarker, endMarker;
+  let activeAddressInput = null;
+  let editAddressType = null;
+  let longPressTimer = null;
+  let isLongPressActive = false;
+  // ======================
+  // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ДЛЯ API
+  // ======================
+  const API_BASE_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:8004' 
+    : 'https://taxibarsnz24.ru';
+  // ======================
+  // ФУНКЦИИ КАРТЫ И АДРЕСОВ
+  // ======================
+  function getCurrentLocation() {
+    locationStatus.textContent = "Определение местоположения...";
+    locationStatus.style.display = 'block';
+    startInput.placeholder = "Определение местоположения...";
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Геолокация не поддерживается'));
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const coords = [position.coords.latitude, position.coords.longitude];
+          currentLocation = coords;
+          locationStatus.style.display = 'none';
+          resolve(coords);
+        },
+        (error) => {
+          let msg = 'Не удалось определить местоположение';
+          if (error.code === error.PERMISSION_DENIED) {
+            msg = 'Доступ к геолокации запрещен';
+          } else if (error.code === error.TIMEOUT) {
+            msg = 'Превышено время ожидания';
+          }
+          locationStatus.style.display = 'none';
+          reject(new Error(msg));
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    });
+  }
+  function showLocationError(error) {
+    locationError.querySelector('div').textContent = error.message;
+    locationError.style.display = 'block';
+    startInput.placeholder = "Ваше местоположение";
+  }
+  function retryLocation() {
+    locationError.style.display = 'none';
+    startInput.placeholder = "Определение местоположения...";
+    startInput.value = "";
+    getCurrentLocation()
+      .then(coords => {
+        if (ymap) updateLocation(coords);
+      })
+      .catch(error => {
+        showLocationError(error);
+      });
+  }
+  function updateLocation(coords) {
+    if (!startMarker) return;
+    startMarker.geometry.setCoordinates(coords);
+    ymap.setCenter(coords, 15);
+    ymaps.geocode(coords, { results: 1 }).then(res => {
+      const geoObject = res.geoObjects.get(0);
+      if (geoObject) {
+        const fullAddress = geoObject.getAddressLine();
+        startInputFull.value = fullAddress;
+        startInput.value = fullAddress;
+        determineCity(coords).then(city => {
+          currentUserCity = city;
+        });
+      }
+    }).catch(error => {
+      console.error('Ошибка геокодирования:', error);
+    });
+  }
+  function determineCity(coords) {
+    return new Promise((resolve) => {
+      ymaps.geocode(coords, { results: 1 }).then(res => {
+        const geoObject = res.geoObjects.get(0);
+        if (geoObject) {
+          const addr = geoObject.getAddressLine().toLowerCase();
+          const [lat, lng] = coords;
+          // Проверяем известные города по названию
+          if (addr.includes('ужур')) {
+            resolve({ 
+              name: 'Ужур', 
+              bounds: [[55.9700, 89.8100], [56.0700, 89.9100]],
+              center: [56.0200, 89.8600]
+            });
+          } else if (addr.includes('ачинск')) {
+            resolve({ 
+              name: 'Ачинск', 
+              bounds: [[56.1600, 94.1600], [56.2600, 94.2600]],
+              center: [56.2100, 94.2100]
+            });
+          } else if (addr.includes('минусинск')) {
+            resolve({ 
+              name: 'Минусинск', 
+              bounds: [[53.6800, 91.6500], [53.7800, 91.7500]],
+              center: [53.7300, 91.6900]
+            });
+          } else if (addr.includes('курагино')) {
+            resolve({ 
+              name: 'Курагино', 
+              bounds: [[54.0100, 92.8600], [54.1100, 92.9600]],
+              center: [54.0600, 92.9100]
+            });
+          } else if (addr.includes('шарыпово')) {
+            resolve({ 
+              name: 'Шарыпово', 
+              bounds: [[55.4000, 91.8900], [55.5000, 91.9900]],
+              center: [55.4500, 91.9400]
+            });
+          } else if (addr.includes('абан')) {
+            resolve({ 
+              name: 'Абан', 
+              bounds: [[54.6900, 96.2100], [54.7900, 96.3100]],
+              center: [54.7400, 96.2600]
+            });
+          } else if (addr.includes('балахта')) {
+            resolve({ 
+              name: 'Балахта', 
+              bounds: [[55.0800, 93.9800], [55.1800, 94.0800]],
+              center: [55.1300, 94.0300]
+            });
+          } else if (addr.includes('назарово') || addr.includes('красноярск')) {
+            resolve({ 
+              name: 'Назарово', 
+              bounds: [[56.3823, 95.4500], [56.4023, 95.4700]],
+              center: [56.3923, 95.4600]
+            });
+          } else if (addr.includes('москва')) {
+            resolve({ 
+              name: 'Москва', 
+              bounds: [[55.4892, 37.3193], [55.9892, 37.9193]],
+              center: [55.7558, 37.6173]
+            });
+          } else if (addr.includes('санкт-петербург') || addr.includes('спб')) {
+            resolve({ 
+              name: 'Санкт-Петербург', 
+              bounds: [[59.5576, 30.0063], [60.1304, 30.6616]],
+              center: [59.9343, 30.3351]
+            });
+          } else if (addr.includes('екатеринбург')) {
+            resolve({ 
+              name: 'Екатеринбург', 
+              bounds: [[56.6437, 60.2811], [56.9437, 60.5811]],
+              center: [56.8519, 60.6122]
+            });
+          } else if (addr.includes('новосибирск')) {
+            resolve({ 
+              name: 'Новосибирск', 
+              bounds: [[54.7983, 82.8762], [55.0983, 83.1762]],
+              center: [54.9887, 82.9034]
+            });
+          } 
+          // Определяем город по координатам для Красноярского края
+          else if (lat > 55.8 && lat < 56.2 && lng > 89.5 && lng < 90.5) {
+            resolve({ 
+              name: 'Ужур', 
+              bounds: [[55.9700, 89.8100], [56.0700, 89.9100]],
+              center: [56.0200, 89.8600]
+            });
+          } else if (lat > 56.1 && lat < 56.3 && lng > 94.0 && lng < 94.4) {
+            resolve({ 
+              name: 'Ачинск', 
+              bounds: [[56.1600, 94.1600], [56.2600, 94.2600]],
+              center: [56.2100, 94.2100]
+            });
+          } else if (lat > 53.6 && lat < 53.8 && lng > 91.6 && lng < 91.8) {
+            resolve({ 
+              name: 'Минусинск', 
+              bounds: [[53.6800, 91.6500], [53.7800, 91.7500]],
+              center: [53.7300, 91.6900]
+            });
+          } else if (lat > 56.3 && lat < 56.5 && lng > 95.3 && lng < 95.6) {
+            resolve({ 
+              name: 'Назарово', 
+              bounds: [[56.3823, 95.4500], [56.4023, 95.4700]],
+              center: [56.3923, 95.4600]
+            });
+          } else {
+            // Если не удалось определить город, используем Назарово по умолчанию
+            resolve({ 
+              name: 'Назарово', 
+              bounds: [[56.3823, 95.4500], [56.4023, 95.4700]],
+              center: [56.3923, 95.4600]
+            });
+          }
+        } else {
+          // Если не удалось получить геообъект
+          resolve({ 
+            name: 'Назарово', 
+            bounds: [[56.3823, 95.4500], [56.4023, 95.4700]],
+            center: [56.3923, 95.4600]
+          });
+        }
+      }).catch(() => {
+        // При ошибке геокодирования
+        resolve({ 
+          name: 'Назарово', 
+          bounds: [[56.3823, 95.4500], [56.4023, 95.4700]],
+          center: [56.3923, 95.4600]
+        });
+      });
+    });
+  }
+  function initMap(initialCoords) {
+    try {
+      mapLoader.style.opacity = '0';
+      setTimeout(() => mapLoader.style.display = 'none', 300);
+      ymap = new ymaps.Map('map', {
+        center: initialCoords,
+        zoom: 15,
+        controls: ['zoomControl']
+      }, { suppressMapOpenBlock: true });
+      startMarker = new ymaps.Placemark(initialCoords, { hintContent: 'Начало маршрута' }, {
+        preset: 'islands#blackCircleDotIconWithCaption',
+        iconColor: '#000'
+      });
+      endMarker = new ymaps.Placemark(initialCoords, { hintContent: 'Конец маршрута' }, {
+        preset: 'islands#redCircleDotIconWithCaption',
+        iconColor: '#FF0000'
+      });
+      ymap.geoObjects.add(startMarker);
+      ymap.geoObjects.add(endMarker);
+      startMarker.events.add('dragend', (e) => {
+        const coords = startMarker.geometry.getCoordinates();
+        getAddressFromCoords(coords, 'start', true);
+      });
+      endMarker.events.add('dragend', (e) => {
+        const coords = endMarker.geometry.getCoordinates();
+        getAddressFromCoords(coords, 'end', true);
+      });
+      // Добавляем обработчики клика на карту для режима установки маркера
+      ymap.events.add('click', function(e) {
+        if (markerSetMode) {
+          e.preventDefault();
+          const coords = e.get('coords');
+          
+          if (markerSetMode === 'start') {
+            startMarker.geometry.setCoordinates(coords);
+            getAddressFromCoords(coords, 'start', true);
+          } else {
+            endMarker.geometry.setCoordinates(coords);
+            getAddressFromCoords(coords, 'end', true);
+          }
+          
+          deactivateMarkerSetMode();
+        }
+      });
+      
+      // Добавляем обработчики тач-событий для мобильных устройств
+      ymap.events.add('touchstart', function(e) {
+        if (markerSetMode) {
+          e.preventDefault();
+          const coords = e.get('coords');
+          
+          if (markerSetMode === 'start') {
+            startMarker.geometry.setCoordinates(coords);
+            getAddressFromCoords(coords, 'start', true);
+          } else {
+            endMarker.geometry.setCoordinates(coords);
+            getAddressFromCoords(coords, 'end', true);
+          }
+          
+          deactivateMarkerSetMode();
+        }
+      });
+      if (currentLocation) updateLocation(currentLocation);
+      updateQuickAddressSubtitles();
+      setupAddressAutocomplete();
+    } catch (error) {
+      console.error('Ошибка инициализации карты:', error);
+      mapLoader.innerHTML = `<div style="color: var(--error-color); padding: 20px;">Ошибка загрузки карты</div>`;
+    }
+  }
+  function getAddressFromCoords(coords, type, recalc = false) {
+    ymaps.geocode(coords, { results: 1 }).then(res => {
+      const geoObject = res.geoObjects.get(0);
+      if (geoObject) {
+        const fullAddr = geoObject.getAddressLine();
+        const input = type === 'start' ? startInput : endInput;
+        const inputFull = type === 'start' ? startInputFull : endInputFull;
+        inputFull.value = fullAddr;
+        input.value = fullAddr;
+        if (recalc) calculateRoute();
+      }
+    }).catch(error => console.error(`Ошибка получения адреса:`, error));
+  }
+  function getCurrentCity() {
+    let addr = startInputFull.value.toLowerCase() || startInput.value.toLowerCase();
+    if (addr.includes('ужур')) return 'krasnoyarsk';
+    if (addr.includes('ачинск')) return 'krasnoyarsk';
+    if (addr.includes('минусинск')) return 'krasnoyarsk';
+    if (addr.includes('курагино')) return 'krasnoyarsk';
+    if (addr.includes('шарыпово')) return 'krasnoyarsk';
+    if (addr.includes('назарово') || addr.includes('красноярск')) return 'krasnoyarsk';
+    if (addr.includes('москва')) return 'moscow';
+    if (addr.includes('санкт-петербург') || addr.includes('спб')) return 'spb';
+    if (addr.includes('екатеринбург')) return 'ekaterinburg';
+    if (addr.includes('новосибирск')) return 'novosibirsk';
+    return 'default';
+  }
+  function clearRoute() {
+    if (route) {
+      ymap.geoObjects.remove(route);
+      route = null;
+    }
+    document.getElementById('priceDisplay').textContent = '— ₽';
+    document.getElementById('distanceDisplay').textContent = '— км';
+    document.getElementById('estimatedTime').textContent = 'Рассчитывается';
+    routeDetails.style.display = 'none';
+    document.querySelector('.price-placeholder').style.display = 'block';
+    document.querySelector('.distance-placeholder').style.display = 'block';
+    isRouteCalculated = false;
+    // Сбрасываем флаг готовности маршрута
+    isRouteReady = false;
+    orderButton.disabled = true;
+  }
+  function showError(message) {
+    alert(`Ошибка: ${message}`);
+    clearRoute();
+  }
+  function setupAddressAutocomplete() {
+    startInput.addEventListener('focus', () => { activeAddressInput = 'start'; showQuickAddresses(); });
+    endInput.addEventListener('focus', () => { activeAddressInput = 'end'; showQuickAddresses(); });
+    startInput.addEventListener('blur', () => {
+      setTimeout(() => { if (startInput.value.trim() && endInput.value.trim()) calculateRoute(); }, 200);
+    });
+    endInput.addEventListener('blur', () => {
+      setTimeout(() => { if (startInput.value.trim() && endInput.value.trim()) calculateRoute(); }, 200);
+    });
+    startInput.addEventListener('change', () => {
+      if (startInput.value.trim()) geocodeAddress(startInput.value, 'start');
+    });
+    endInput.addEventListener('change', () => {
+      if (endInput.value.trim()) geocodeAddress(endInput.value, 'end');
+    });
+    startInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && startInput.value.trim() && endInput.value.trim()) {
+        e.preventDefault();
+        calculateRoute();
+      }
+    });
+    endInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && startInput.value.trim() && endInput.value.trim()) {
+        e.preventDefault();
+        calculateRoute();
+      }
+    });
+    // Закрываем режим при вводе адреса вручную
+    startInput.addEventListener('input', function() {
+      if (markerSetMode === 'start') {
+        deactivateMarkerSetMode();
+      }
+    });
+    
+    endInput.addEventListener('input', function() {
+      if (markerSetMode === 'end') {
+        deactivateMarkerSetMode();
+      }
+    });
+    document.querySelectorAll('.quick-address-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        if (isLongPressActive) return;
+        const addressType = item.getAttribute('data-address');
+        handleQuickAddress(addressType);
+      });
+      const addressType = item.getAttribute('data-address');
+      if (addressType === 'home' || addressType === 'work') {
+        const handleLongPress = () => {
+          isLongPressActive = true;
+          showAddressEditModal(addressType);
+        };
+        item.addEventListener('mousedown', () => longPressTimer = setTimeout(handleLongPress, 500));
+        item.addEventListener('mouseup', () => { if (longPressTimer) clearTimeout(longPressTimer); });
+        item.addEventListener('mouseleave', () => { if (longPressTimer) clearTimeout(longPressTimer); });
+        item.addEventListener('touchstart', () => longPressTimer = setTimeout(handleLongPress, 500));
+        item.addEventListener('touchend', () => { if (longPressTimer) clearTimeout(longPressTimer); });
+        item.addEventListener('touchcancel', () => { if (longPressTimer) clearTimeout(longPressTimer); });
+      }
+    });
+    addressEditSaveBtn.addEventListener('click', saveEditedAddress);
+    addressEditCancelBtn.addEventListener('click', () => {
+      addressEditContainer.style.display = 'none';
+      editAddressType = null;
+      isLongPressActive = false;
+      quickAddressesContainer.style.display = 'block';
+    });
+    // Закрытие модального окна быстрых адресов при клике на пустое место
+    document.addEventListener('click', function(e) {
+      if (!quickAddressesContainer.contains(e.target) && 
+          !startInput.contains(e.target) && 
+          !endInput.contains(e.target) &&
+          quickAddressesContainer.style.display === 'block') {
+        quickAddressesContainer.style.display = 'none';
+        addressEditContainer.style.display = 'none';
+      }
+    });
+  }
+  function updateQuickAddressSubtitles() {
+    if (currentLocation) {
+      ymaps.geocode(currentLocation, { results: 1 }).then(res => {
+        const geoObject = res.geoObjects.get(0);
+        if (geoObject) {
+          currentLocationSubtitle.textContent = geoObject.getAddressLine();
+        } else {
+          currentLocationSubtitle.textContent = 'Не удалось определить адрес';
+        }
+      }).catch(() => currentLocationSubtitle.textContent = 'Ошибка определения адреса');
+    } else {
+      getCurrentLocation().then(coords => {
+        currentLocation = coords;
+        updateQuickAddressSubtitles();
+      }).catch(() => currentLocationSubtitle.textContent = 'Не определено');
+    }
+    homeSubtitle.textContent = quickAddresses.home || 'Не установлен';
+    workSubtitle.textContent = quickAddresses.work || 'Не установлен';
+  }
+  function showQuickAddresses() {
+    quickAddressesContainer.style.display = 'block';
+    addressEditContainer.style.display = 'none';
+    updateQuickAddressSubtitles();
+  }
+  function handleQuickAddress(addressType) {
+    if (addressType === 'current-location') {
+      if (!currentLocation) {
+        locationStatus.textContent = "Определение местоположения...";
+        locationStatus.style.display = 'block';
+        getCurrentLocation()
+          .then(coords => {
+            currentLocation = coords;
+            locationStatus.style.display = 'none';
+            getAddressFromCoords(currentLocation, activeAddressInput, true);
+            quickAddressesContainer.style.display = 'none';
+          })
+          .catch(error => {
+            locationStatus.style.display = 'none';
+            alert('Не удалось определить местоположение: ' + error.message);
+            quickAddressesContainer.style.display = 'none';
+          });
+      } else {
+        getAddressFromCoords(currentLocation, activeAddressInput, true);
+        quickAddressesContainer.style.display = 'none';
+      }
+    } else if (addressType === 'home' || addressType === 'work') {
+      if (quickAddresses[addressType]?.trim()) {
+        const input = activeAddressInput === 'start' ? startInput : endInput;
+        const inputFull = activeAddressInput === 'start' ? startInputFull : endInputFull;
+        inputFull.value = quickAddresses[addressType];
+        input.value = quickAddresses[addressType];
+        geocodeAddress(quickAddresses[addressType], activeAddressInput);
+        quickAddressesContainer.style.display = 'none';
+      } else {
+        showAddressEditModal(addressType);
+      }
+    }
+    isLongPressActive = false;
+  }
+  function showAddressEditModal(addressType) {
+    editAddressType = addressType;
+    addressEditInput.value = quickAddresses[addressType] || '';
+    if (addressType === 'home') {
+      editTitleElement.textContent = 'Адрес дома';
+      addressEditInput.placeholder = 'Введите адрес дома';
+    } else if (addressType === 'work') {
+      editTitleElement.textContent = 'Адрес работы';
+      addressEditInput.placeholder = 'Введите адрес работы';
+    }
+    addressEditContainer.style.display = 'block';
+    quickAddressesContainer.style.display = 'block';
+    setTimeout(() => addressEditInput.focus(), 100);
+  }
+  function saveEditedAddress() {
+    const address = addressEditInput.value.trim();
+    if (address) {
+      quickAddresses[editAddressType] = address;
+      localStorage.setItem(`quickAddress${editAddressType.charAt(0).toUpperCase() + editAddressType.slice(1)}`, address);
+      const input = activeAddressInput === 'start' ? startInput : endInput;
+      const inputFull = activeAddressInput === 'start' ? startInputFull : endInputFull;
+      inputFull.value = address;
+      input.value = address;
+      geocodeAddress(address, activeAddressInput);
+      addressEditContainer.style.display = 'none';
+      editAddressType = null;
+      isLongPressActive = false;
+      updateQuickAddressSubtitles();
+    }
+  }
+  function setupPassengerSelection() {
+    passengerButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        passengerButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        passengerCount = parseInt(btn.getAttribute('data-passengers'));
+        if (isRouteCalculated) calculateRoute();
+      });
+    });
+  }
+  function setupQuickComments() {
+    document.querySelectorAll('.quick-comment-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const commentText = btn.getAttribute('data-comment');
+        if (!commentInput.classList.contains('active')) {
+          commentInput.classList.add('active');
+          quickComments.classList.add('active');
+        }
+        if (commentInput.value.trim() === '') commentInput.value = commentText;
+        else commentInput.value += '\n' + commentText;
+        commentInput.scrollTop = commentInput.scrollHeight;
+        btn.classList.add('active');
+        setTimeout(() => btn.classList.remove('active'), 300);
+      });
+    });
+  }
+  function setupCommentField() {
+    commentTrigger.addEventListener('click', () => {
+      commentInput.classList.add('active');
+      quickComments.classList.add('active');
+      commentInput.focus();
+    });
+    document.addEventListener('click', (e) => {
+      if (!commentInput.contains(e.target) && !commentTrigger.contains(e.target) && !quickComments.contains(e.target)) {
+        quickComments.classList.remove('active');
+        if (commentInput.value.trim() === '') commentInput.classList.remove('active');
+      }
+    });
+    commentInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        quickComments.classList.remove('active');
+        if (commentInput.value.trim() === '') commentInput.classList.remove('active');
+        commentInput.blur();
+      }
+    });
+  }
+  function setupMenu() {
+    menuToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('active');
+      sidebarOverlay.classList.toggle('active');
+      menuToggle.classList.toggle('menu-open');
+    });
+    sidebarOverlay.addEventListener('click', () => {
+      sidebar.classList.remove('active');
+      sidebarOverlay.classList.remove('active');
+      menuToggle.classList.remove('menu-open');
+    });
+    document.querySelectorAll('.sidebar-item').forEach(item => {
+      item.addEventListener('click', () => {
+        document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        const action = item.getAttribute('data-action');
+        sidebar.classList.remove('active');
+        sidebarOverlay.classList.remove('active');
+        menuToggle.classList.remove('menu-open');
+        if (action === 'support') {
+          alert('Поддержка: +7 (495) 123-45-67\nsupport@vash-taxi.ru');
+        }
+        if (action === 'history') {
+          showHistoryModal();
+        }
+      });
+    });
+  }
+  function setupSwapAddresses() {
+    swapAddressesBtn.addEventListener('click', () => {
+      const startValue = startInput.value;
+      const startFullValue = startInputFull.value;
+      const endValue = endInput.value;
+      const endFullValue = endInputFull.value;
+      const startCoords = startMarker.geometry.getCoordinates();
+      const endCoords = endMarker.geometry.getCoordinates();
+      startInput.value = endValue;
+      startInputFull.value = endFullValue;
+      endInput.value = startValue;
+      endInputFull.value = startFullValue;
+      startMarker.geometry.setCoordinates(endCoords);
+      endMarker.geometry.setCoordinates(startCoords);
+      setTimeout(() => ymap.setBounds(ymap.geoObjects.getBounds(), {checkZoomRange: true}), 100);
+      if (startFullValue && endFullValue) calculateRoute();
+      swapAddressesBtn.style.transform = 'scale(1.2)';
+      setTimeout(() => swapAddressesBtn.style.transform = 'scale(1)', 200);
+    });
+  }
+  function setupInputSelectAll() {
+    startInput.addEventListener('focus', function() { if (this.value) this.select(); });
+    endInput.addEventListener('focus', function() { if (this.value) this.select(); });
+  }
+  // ======================
+  // ФУНКЦИИ ДЛЯ УСТАНОВКИ МАРКЕРА
+  // ======================
+  function setupMarkerSetButtons() {
+    if (setStartMarkerBtn && setEndMarkerBtn) {
+      setStartMarkerBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        activateMarkerSetMode('start');
+      });
+      
+      setEndMarkerBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        activateMarkerSetMode('end');
+      });
+      
+      // Закрываем режим при нажатии Esc
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && markerSetMode) {
+          deactivateMarkerSetMode();
+        }
+      });
+      
+      // Закрываем режим при клике вне карты
+      document.addEventListener('click', function(e) {
+        if (markerSetMode && 
+            !e.target.closest('#map') && 
+            !e.target.closest('.marker-set-btn') &&
+            !e.target.closest('.marker-set-indicator')) {
+          deactivateMarkerSetMode();
+        }
+      });
+    }
+  }
+
+  function activateMarkerSetMode(mode) {
+    markerSetMode = mode;
+    document.body.classList.add('marker-set-mode');
+    
+    let message = '';
+    if (mode === 'start') {
+      message = 'Выберите начальную точку на карте';
+    } else {
+      message = 'Выберите конечную точку на карте';
+    }
+    
+    if (markerSetIndicator) {
+      markerSetIndicator.textContent = message;
+      markerSetIndicator.style.display = 'block';
+      markerSetIndicator.style.animation = 'fadeIn 0.3s ease';
+    }
+    
+    // Скрываем индикатор через 5 секунд, если режим все еще активен
+    setTimeout(() => {
+      if (markerSetMode === mode && markerSetIndicator) {
+        markerSetIndicator.style.animation = 'fadeOut 0.3s forwards';
+        setTimeout(() => {
+          if (markerSetMode === mode) {
+            markerSetIndicator.style.display = 'none';
+          }
+        }, 300);
+      }
+    }, 5000);
+  }
+
+  function deactivateMarkerSetMode() {
+    markerSetMode = null;
+    document.body.classList.remove('marker-set-mode');
+    
+    if (markerSetIndicator) {
+      markerSetIndicator.style.animation = 'fadeOut 0.3s forwards';
+      setTimeout(() => {
+        markerSetIndicator.style.display = 'none';
+      }, 300);
+    }
+  }
+  // ======================
+  // ПЕРЕРАБОТАННАЯ ФУНКЦИЯ GEOCODEADDRESS
+  // ======================
+  function geocodeAddress(address, type) {
+    ymaps.geocode(address, { results: 1, boundedBy: currentUserCity.bounds }).then(res => {
+      const geoObject = res.geoObjects.get(0);
+      if (geoObject) {
+        const coords = geoObject.geometry.getCoordinates();
+        if (type === 'start') { 
+          startMarker.geometry.setCoordinates(coords); 
+          ymap.setCenter(coords, 15); 
+        } else {
+          endMarker.geometry.setCoordinates(coords);
+          setTimeout(() => {
+            ymap.setBounds(ymap.geoObjects.getBounds(), {checkZoomRange: true});
+          }, 100);
+        }
+        const input = type === 'start' ? startInput : endInput;
+        const inputFull = type === 'start' ? startInputFull : endInputFull;
+        const fullAddress = geoObject.getAddressLine();
+        inputFull.value = fullAddress;
+        input.value = fullAddress;
+        calculateRoute();
+      }
+    }).catch(error => {
+      console.error(`Ошибка геокодирования адреса ${address}:`, error);
+    });
+  }
+  // ======================
+  // ФУНКЦИИ МАРШРУТА
+  // ======================
+  function calculateRoute() {
+    const start = startInputFull.value.trim();
+    const end = endInputFull.value.trim();
+    orderButton.disabled = true;
+    isRouteReady = false;
+    if (!start || !end) {
+      clearRoute();
+      return;
+    }
+    routeLoader.classList.add('active');
+    try {
+      const multiRoute = new ymaps.multiRouter.MultiRoute({
+        referencePoints: [startMarker.geometry.getCoordinates(), endMarker.geometry.getCoordinates()],
+        params: { routingMode: "auto" }
+      }, { 
+        boundsAutoApply: true,
+        zoomMargin: 30
+      });
+      if (route) ymap.geoObjects.remove(route);
+      ymap.geoObjects.add(multiRoute);
+      route = multiRoute;
+      multiRoute.model.events.once('requestsuccess', () => {
+        const activeRoute = multiRoute.getActiveRoute();
+        if (activeRoute && activeRoute.properties.get("distance")) {
+          updateRouteInfo(activeRoute);
+          isRouteCalculated = true;
+          orderButton.disabled = false;
+        } else {
+          // Если не удалось построить маршрут, используем резервный метод
+          fallbackRouteCalculation();
+          orderButton.disabled = true;
+        }
+        routeLoader.classList.remove('active');
+      });
+      multiRoute.model.events.once('requestfail', () => {
+        // Если основной метод не сработал, используем резервный
+        fallbackRouteCalculation();
+        orderButton.disabled = true;
+        routeLoader.classList.remove('active');
+      });
+    } catch (error) {
+      console.error('Ошибка при создании маршрута:', error);
+      fallbackRouteCalculation();
+      routeLoader.classList.remove('active');
+    }
+  }
+  // Резервный метод расчета маршрута
+  function fallbackRouteCalculation() {
+    const startCoords = startMarker.geometry.getCoordinates();
+    const endCoords = endMarker.geometry.getCoordinates();
+    // Примерная оценка расстояния между точками
+    const distance = ymaps.coordSystem.geo.getDistance(startCoords, endCoords) / 1000;
+    const duration = Math.max(15, Math.round(distance / 50 * 60)); // Примерно 50 км/ч
+    // Обновляем информацию о маршруте
+    updateFallbackRouteInfo(distance, duration);
+    isRouteCalculated = true;
+    orderButton.disabled = false;
+  }
+  // Обновление информации при резервном расчете
+  function updateFallbackRouteInfo(distance, duration) {
+    // Унифицируем формат: duration всегда в минутах
+    const durationMinutes = parseDurationToMinutes(duration.toString());
+    const durationText = `${durationMinutes} мин`;
+    const trafficMsg = `Среднее время в пути: ${durationText}`;
+    routeDetails.textContent = trafficMsg;
+    routeDetails.className = 'route-details info';
+    routeDetails.style.display = 'block';
+    const city = getCurrentCity();
+    const pricePerKm = CONFIG.PRICE_PER_KM[city] || CONFIG.PRICE_PER_KM.default;
+    let basePrice = distance * pricePerKm;
+    const extraPassengers = Math.max(0, passengerCount - 1);
+    const extraFee = extraPassengers * CONFIG.EXTRA_PASSENGER_FEE;
+    let totalPrice = basePrice + extraFee;
+    if (totalPrice < CONFIG.MIN_PRICE) totalPrice = CONFIG.MIN_PRICE;
+    document.querySelector('.price-placeholder').style.display = 'none';
+    document.querySelector('.distance-placeholder').style.display = 'none';
+    calculatedValues.style.display = 'block';
+    document.getElementById('priceDisplay').textContent = `${Math.round(totalPrice)} ₽`;
+    document.getElementById('distanceDisplay').textContent = `${distance.toFixed(1)} км`;
+    document.getElementById('estimatedTime').textContent = durationText;
+    isRouteReady = true;
+}
+  function updateRouteInfo(activeRoute) {
+    const distance = (activeRoute.properties.get("distance").value / 1000).toFixed(1);
+    const duration = activeRoute.properties.get("duration").text;
+    const trafficLevel = getTrafficLevel(activeRoute);
+    // Правильный расчет и отображение времени в пути
+    let durationMinutes = parseDurationToMinutes(duration);
+    let durationText = `${durationMinutes} мин`;
+    let trafficMsg = `Пробки: умеренные • Время в пути: ${durationText}`;
+    if (trafficLevel === 'low') {
+        trafficMsg = `Пробки: низкие • Время в пути: ${durationText}`;
+    } else if (trafficLevel === 'heavy') {
+        const timeWithoutTraffic = Math.max(1, Math.round(durationMinutes * 0.7));
+        trafficMsg = `Пробки: высокие • Время в пути: ${durationText} (без пробок: ${timeWithoutTraffic} мин)`;
+    }
+    routeDetails.textContent = trafficMsg;
+    routeDetails.className = 'route-details info';
+    routeDetails.style.display = 'block';
+    const city = getCurrentCity();
+    const pricePerKm = CONFIG.PRICE_PER_KM[city] || CONFIG.PRICE_PER_KM.default;
+    let basePrice = distance * pricePerKm;
+    const extraPassengers = Math.max(0, passengerCount - 1);
+    const extraFee = extraPassengers * CONFIG.EXTRA_PASSENGER_FEE;
+    let totalPrice = basePrice + extraFee;
+    if (totalPrice < CONFIG.MIN_PRICE) totalPrice = CONFIG.MIN_PRICE;
+    document.querySelector('.price-placeholder').style.display = 'none';
+    document.querySelector('.distance-placeholder').style.display = 'none';
+    calculatedValues.style.display = 'block';
+    document.getElementById('priceDisplay').textContent = `${Math.round(totalPrice)} ₽`;
+    document.getElementById('distanceDisplay').textContent = `${distance} км`;
+    document.getElementById('estimatedTime').textContent = durationText;
+    // Устанавливаем флаг, что маршрут готов
+    isRouteReady = true;
+}
+function parseDurationToMinutes(durationText) {
+    // Парсинг длительности из текста в минуты
+    if (!durationText) return 15;
+    // Если текст уже содержит "мин", извлекаем число
+    const minutesMatch = durationText.match(/(\d+)\s*мин/);
+    if (minutesMatch) {
+        return parseInt(minutesMatch[1], 10);
+    }
+    // Если текст содержит часы и минуты
+    const hoursMinutesMatch = durationText.match(/(\d+)\s*ч\s*(\d+)\s*мин/);
+    if (hoursMinutesMatch) {
+        const hours = parseInt(hoursMinutesMatch[1], 10);
+        const minutes = parseInt(hoursMinutesMatch[2], 10);
+        return hours * 60 + minutes;
+    }
+    // Если текст содержит только часы
+    const hoursMatch = durationText.match(/(\d+)\s*ч/);
+    if (hoursMatch) {
+        return parseInt(hoursMatch[1], 10) * 60;
+    }
+    // Если текст содержит только минуты
+    const numberMatch = durationText.match(/(\d+)/);
+    if (numberMatch) {
+        return parseInt(numberMatch[1], 10);
+    }
+    return 15;
+}
+function getTrafficLevel(route) {
+    const distance = route.properties.get("distance").value / 1000;
+    const durationValue = parseFloat(route.properties.get("duration").text);
+    const avgSpeed = distance / (durationValue / 60); // км/ч
+    if (avgSpeed > 45) return 'low';    // Свободное движение
+    if (avgSpeed > 25) return 'moderate'; // Умеренные пробки
+    return 'heavy';                     // Сильные пробки
+}
+  function getTrafficLevel(route) {
+    const distance = route.properties.get("distance").value / 1000;
+    const durationValue = parseFloat(route.properties.get("duration").text);
+    if (durationValue < 5) return 'low';
+    if (distance > 10 && durationValue / distance > 1.5) return 'heavy';
+    if (distance > 5 && durationValue / distance > 1.2) return 'moderate';
+    return 'low';
+  }
+  // ======================
+  // ФУНКЦИИ МОДАЛЬНОГО ОКНА ПОИСКА ВОДИТЕЛЯ
+  // ======================
+  function showSearchDriverModal(orderId, orderData) {
+  if (isSearchModalOpen) return;
+  isSearchModalOpen = true;
+  searchDriverModalOverlay.classList.add('active');
+  searchDriverModal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+  let timeLeft = 180; // 3 минуты в секундах
+  searchTimerValue.textContent = '03:00';
+  // Запускаем таймер
+  const searchTimer = setInterval(() => {
+    timeLeft--;
+    const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+    const s = (timeLeft % 60).toString().padStart(2, '0');
+    searchTimerValue.textContent = `${m}:${s}`;
+    if (timeLeft <= 0) {
+      clearInterval(searchTimer);
+      closeSearchDriverModal();
+      showCancelScreen();
+    }
+  }, 1000);
+  // Изменяем обработчик кнопки отмены
+  cancelSearchBtn.onclick = () => {
+    // Создаем модальное окно подтверждения
+    const confirmModal = document.createElement('div');
+    confirmModal.className = 'search-cancel-modal';
+    confirmModal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      displayed: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    `;
+    confirmModal.innerHTML = `
+      <div style="background: white; border-radius: 16px; padding: 24px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.1); position: relative;">
+        <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 16px; color: #212121;">Подтверждение отмены</h3>
+        <p style="font-size: 16px; color: #616161; margin-bottom: 24px; line-height: 1.5;">
+          Вы уверены, что хотите отменить поиск водителя?
+        </p>
+        <div style="display: flex; gap: 12px;">
+          <button class="cancel-confirm-btn" style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #d9d9d9; background: #f8f9fa; color: #212121; font-weight: 500; cursor: pointer;">
+            Отмена
+          </button>
+          <button class="confirm-btn" style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: #d32f2f; color: white; font-weight: 500; cursor: pointer;">
+            Подтвердить
+          </button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(confirmModal);
+    // Обработчик кнопки "Отмена" в модальном окне
+    confirmModal.querySelector('.cancel-confirm-btn').addEventListener('click', () => {
+      document.body.removeChild(confirmModal);
+    });
+    // Обработчик кнопки "Подтвердить" в модальном окне
+    confirmModal.querySelector('.confirm-btn').addEventListener('click', () => {
+      document.body.removeChild(confirmModal);
+      clearInterval(searchTimer);
+      closeSearchDriverModal();
+      cancelOrder(orderId);
+    });
+  };
+    // Запускаем опрос откликов водителей
+    let hasReceivedFirstBid = false;
+    const pollBidsForSearch = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/web/order/${orderId}/bids`);
+        if (!res.ok) throw new Error(`${res.status}`);
+        const data = await res.json();
+        if (data.success && data.bids?.length > 0 && !hasReceivedFirstBid) {
+          hasReceivedFirstBid = true;
+          clearInterval(searchTimer);
+          // Закрываем окно поиска и открываем окно выбора водителей
+          closeSearchDriverModal();
+          // Используем setTimeout для гарантии, что модальное окно полностью закрылось
+          setTimeout(() => {
+            showDriverModalForWeb(orderId, orderData);
+          }, 300);
+        } else {
+          setTimeout(pollBidsForSearch, 2000);
+        }
+      } catch (e) {
+        console.error('Poll bids error:', e);
+        setTimeout(pollBidsForSearch, 3000);
+      }
+    };
+    pollBidsForSearch();
+  }
+  function closeSearchDriverModal() {
+    if (!isSearchModalOpen) return;
+    isSearchModalOpen = false;
+    searchDriverModalOverlay.classList.remove('active');
+    searchDriverModal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+  }
+  function closeDriverModal() {
+    if (!isDriverModalOpen) return;
+    isDriverModalOpen = false;
+    driverModal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+    if (driverTimerInterval) {
+      clearInterval(driverTimerInterval);
+      driverTimerInterval = null;
+    }
+  }
+  async function cancelOrder(orderId) {
+    try {
+      const loader = document.getElementById('routeLoader');
+      loader.classList.add('active');
+      loader.textContent = 'Отмена заказа...';
+      loader.style.display = 'block';
+      const res = await fetch(`${API_BASE_URL}/api/web/order/${orderId}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: 'client_canceled' })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(`Сервер: ${res.status} ${err.detail || res.statusText}`);
+      }
+      const result = await res.json();
+      if (!result.success) {
+        throw new Error(result.message || 'Ошибка при отмене заказа');
+      }
+      // После успешной отмены заказа перенаправляем на главную страницу
+      window.location.href = 'main.html';
+    } catch (err) {
+      console.error('Cancel order failed:', err);
+      alert(`Ошибка: ${err.message}`);
+    } finally {
+      const loader = document.getElementById('routeLoader');
+      loader.classList.remove('active');
+      loader.style.display = 'none';
+    }
+  }
+  // ======================
+  // ФУНКЦИИ МОДАЛЬНОГО ОКНА ВЫБОРА ВОДИТЕЛЕЙ
+  // ======================
+  function showDriverModalForWeb(orderId, orderData) {
+    if (isDriverModalOpen) return;
+    isDriverModalOpen = true;
+    driverModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    let timeLeft = 120;
+    const timerEl = document.getElementById('timerValue');
+    timerEl.textContent = '02:00';
+    // Очищаем предыдущий интервал, если он существует
+    if (driverTimerInterval) clearInterval(driverTimerInterval);
+    driverTimerInterval = setInterval(() => {
+      timeLeft--;
+      const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+      const s = (timeLeft % 60).toString().padStart(2, '0');
+      timerEl.textContent = `${m}:${s}`;
+      if (timeLeft <= 0) {
+        clearInterval(driverTimerInterval);
+        closeDriverModal();
+        showCancelScreen();
+      }
+    }, 1000);
+    // Начинаем опрашивать сервер на наличие откликов водителей
+    const pollBids = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/web/order/${orderId}/bids`);
+        if (!res.ok) throw new Error(`${res.status}`);
+        const data = await res.json();
+        if (data.success && data.bids?.length) {
+          renderDriverBids(data.bids, orderId, orderData);
+        }
+        // Продолжаем опрашивать пока окно открыто
+        if (isDriverModalOpen) {
+          setTimeout(pollBids, 2000);
+        }
+      } catch (e) {
+        console.error('Poll bids error:', e);
+        // Продолжаем опрашивать даже при ошибке
+        if (isDriverModalOpen) {
+          setTimeout(pollBids, 3000);
+        }
+      }
+    };
+    pollBids();
+  }
+  function renderDriverBids(bids, orderId, orderData) {
+    const list = document.querySelector('.drivers-list');
+    if (!list) return;
+    list.innerHTML = '';
+    bids.forEach(bid => {
+      const card = document.createElement('div');
+      card.className = 'driver-card';
+      card.dataset.driverId = bid.driver_id;
+      const initial = (bid.driver_name || 'В').charAt(0).toUpperCase();
+      // Форматируем рейтинг для отображения
+      const rating = bid.driver_rating ? bid.driver_rating.toFixed(1) : '—';
+      card.innerHTML = `
+        <div class="driver-card-avatar">${initial}</div>
+        <div class="driver-card-info">
+          <div class="driver-card-name">${bid.driver_name || `Водитель #${bid.driver_id}`}</div>
+          <div class="driver-card-rating">
+            <i class="fas fa-star"></i>
+            <span>${rating}</span>
+          </div>
+          <div class="driver-car">${bid.car_brand} • ${bid.car_number}</div>
+          <div style="font-size:14px;font-weight:500;color:var(--primary-color);margin-top:6px;">
+            Прибытие: ${bid.arrival_minutes} мин
+          </div>
+        </div>
+        <button class="driver-select-btn">Выбрать</button>
+      `;
+      card.querySelector('.driver-select-btn').addEventListener('click', () =>
+        selectDriverForOrder(orderId, bid.driver_id, bid, orderData)
+      );
+      list.appendChild(card);
+    });
+  }
+  async function selectDriverForOrder(orderId, driverId, bid, orderData) {
+    try {
+      const loader = document.getElementById('routeLoader');
+      loader.classList.add('active');
+      loader.textContent = 'Подтверждение выбора...';
+      loader.style.display = 'block';
+      const res = await fetch(`${API_BASE_URL}/api/web/order/${orderId}/accept`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ driver_id: driverId })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(`Сервер: ${res.status} ${err.detail || res.statusText}`);
+      }
+      const result = await res.json();
+      if (result.success) {
+        // Закрываем модальное окно
+        closeDriverModal();
+        // Сохраняем данные о заказе для отображения на странице активного заказа
+        const fullOrderData = {
+          orderId: orderId,
+          driverName: bid.driver_name,
+          driverInitials: (bid.driver_name || '—').charAt(0).toUpperCase(),
+          driverId: bid.driver_id,
+          driverUsername: bid.driver_username || null,
+          carBrand: bid.car_brand,
+          carNumber: bid.car_number,
+          carYear: '2023',
+          carColor: 'Серебристый',
+          pickupAddress: orderData.pickup_address,
+          dropoffAddress: orderData.dropoff_address,
+          price: orderData.price,
+          distanceKm: orderData.distance_km,
+          estimatedTime: orderData.estimated_time_min,
+          passengers: orderData.passengers,
+          driverRating: bid.driver_rating
+        };
+        localStorage.setItem('activeOrderData', JSON.stringify(fullOrderData));
+        // Переходим на страницу активного заказа
+        window.location.href = 'active-order.html';
+      } else {
+        throw new Error(result.message || 'Ошибка при выборе водителя');
+      }
+    } catch (err) {
+      console.error('Driver selection failed:', err);
+      alert(`Ошибка: ${err.message}`);
+    } finally {
+      const loader = document.getElementById('routeLoader');
+      loader.classList.remove('active');
+      loader.style.display = 'none';
+    }
+  }
+  // ======================
+  // ЭКРАН ОТМЕНЫ ЗАКАЗА
+  // ======================
+  function showCancelScreen() {
+    const app = document.querySelector('.container');
+    if (app) app.style.display = 'none';
+    document.body.innerHTML = `
+      <div class="cancel-screen" style="max-width:480px;width:100%;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.03);margin:10px;">
+        <div style="padding:40px 20px;text-align:center;">
+          <div style="font-size:48px;color:#d32f2f;margin-bottom:20px;"><i class="fas fa-times-circle"></i></div>
+          <h2 style="font-size:24px;font-weight:600;margin-bottom:16px;">Заказ отменен</h2>
+          <p style="font-size:16px;color:#616161;margin-bottom:30px;">Время на выбор водителя истекло.</p>
+          <button class="action-btn" onclick="location.reload()" style="background:#000;color:white;padding:16px;border-radius:14px;font-size:16px;font-weight:600;width:100%;border:none;cursor:pointer;">
+            <i class="fas fa-redo"></i> СОЗДАТЬ НОВЫЙ ЗАКАЗ
+          </button>
+        </div>
+      </div>
+      <style>
+        body { background: #f8f9fa; margin:0; padding:0; min-height:100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+      </style>
+    `;
+  }
+  // ======================
+  // ИСТОРИЯ ЗАКАЗОВ
+  // ======================
+  function getOrderHistory() {
+    return JSON.parse(localStorage.getItem('orderHistory')) || [];
+  }
+  function saveOrderToHistory(order) {
+    const history = getOrderHistory();
+    history.unshift(order);
+    if (history.length > 10) history.pop();
+    localStorage.setItem('orderHistory', JSON.stringify(history));
+  }
+  function renderOrderHistory() {
+    const history = getOrderHistory();
+    if (history.length === 0) {
+      historyOrdersContainer.innerHTML = `<div class="empty-history"><i class="fas fa-history"></i><p>У вас пока нет заказов</p></div>`;
+      return;
+    }
+    historyOrdersContainer.innerHTML = history.map(order => {
+      let statusClass = 'status-completed', statusText = 'Выполнен';
+      if (order.status === 'canceled') {
+        statusClass = 'status-canceled';
+        statusText = 'Отменен';
+      }
+      return `
+        <div class="history-order-item">
+          <div class="order-header">
+            <div class="order-date">${order.date}</div>
+            <div class="order-status ${statusClass}">${statusText}</div>
+          </div>
+          <div class="route-info">
+            <div class="route-point"><i class="fas fa-circle" style="font-size: 8px;"></i><span>${order.from}</span></div>
+            <div class="route-point"><i class="fas fa-map-marker-alt"></i><span>${order.to}</span></div>
+          </div>
+          <div class="order-details">
+            <div><div>Стоимость: <span class="order-price">${order.price} ₽</span></div><div>Расстояние: ${order.distance} км</div></div>
+            <button class="repeat-btn" data-order-id="${order.id}"><i class="fas fa-redo"></i><span>Повторить</span></button>
+          </div>
+        </div>
+      `;
+    }).join('');
+    document.querySelectorAll('.repeat-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        repeatOrder(btn.getAttribute('data-order-id'));
+      });
+    });
+  }
+  function repeatOrder(orderId) {
+    const history = getOrderHistory();
+    const order = history.find(o => o.id === orderId);
+    if (order) {
+      startInput.value = order.from;
+      startInputFull.value = order.from;
+      endInput.value = order.to;
+      endInputFull.value = order.to;
+      geocodeAddress(order.from, 'start');
+      geocodeAddress(order.to, 'end');
+      hideHistoryModal();
+      setTimeout(() => document.querySelector('.rent-button').scrollIntoView({ behavior: 'smooth' }), 300);
+    }
+  }
+  function showHistoryModal() {
+    if (isHistoryModalOpen) return;
+    isHistoryModalOpen = true;
+    historyModalOverlay.classList.add('active');
+    historyModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    renderOrderHistory();
+  }
+  function hideHistoryModal() {
+    if (!isHistoryModalOpen) return;
+    isHistoryModalOpen = false;
+    historyModalOverlay.classList.remove('active');
+    historyModal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+  }
+  // ======================
+  // МОДАЛЬНОЕ ОКНО ПРОФИЛЯ
+  // ======================
+  // Функция для принудительного обновления данных профиля с сервера
+  async function refreshProfileData() {
+    const userData = JSON.parse(localStorage.getItem('tg_user'));
+    if (!userData) return null;
+    try {
+      // Явно определяем базовый URL
+      const API_BASE_URL = window.location.hostname === 'localhost' 
+        ? 'http://localhost:8004' 
+        : 'https://taxibarsnz24.ru';
+      console.log('🌐 Запрос к API:', `${API_BASE_URL}/api/web/user/${userData.id}`);
+      const res = await fetch(`${API_BASE_URL}/api/web/user/${userData.id}`, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        },
+        method: 'GET'
+      });
+      console.log('📡 Ответ сервера:', res.status);
+      if (res.ok) {
+        const profileData = await res.json();
+        console.log('✅ Данные профиля получены:', profileData);
+        // Сохраняем в localStorage
+        localStorage.setItem('profileData', JSON.stringify(profileData));
+        localStorage.setItem('profileLastUpdate', Date.now().toString());
+        return profileData;
+      } else {
+        // Пробуем получить детали ошибки
+        let errorDetail = '';
+        try {
+          const errorData = await res.json();
+          errorDetail = errorData.detail || errorData.message || '';
+        } catch (e) {
+          errorDetail = await res.text();
+        }
+        console.warn(`❌ Не удалось обновить данные профиля. Статус: ${res.status}, Детали: ${errorDetail}`);
+        // Пытаемся использовать кэшированные данные как резерв
+        const cachedData = localStorage.getItem('profileData');
+        if (cachedData) {
+          console.log('💾 Используем кэшированные данные профиля');
+          return JSON.parse(cachedData);
+        }
+        return null;
+      }
+    } catch (error) {
+      console.error('💥 Ошибка при обновлении данных профиля:', error);
+      // Пытаемся использовать кэшированные данные как резерв
+      const cachedData = localStorage.getItem('profileData');
+      if (cachedData) {
+        console.log('💾 Используем кэшированные данные профиля после ошибки');
+        return JSON.parse(cachedData);
+      }
+      return null;
+    }
+  }
+  async function showProfileModal() {
+    if (isProfileModalOpen) return;
+    isProfileModalOpen = true;
+    profileModalOverlay.classList.add('active');
+    profileModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    const userData = JSON.parse(localStorage.getItem('tg_user'));
+    if (!userData) {
+      console.warn('❌ Пользователь не авторизован');
+      hideProfileModal();
+      window.location.href = 'login.html';
+      return;
+    }
+    // Показываем состояние загрузки
+    const loadingState = `
+      <div class="profile-header" style="min-height: 120px;">
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%;">
+          <div class="search-spinner" style="border: 3px solid rgba(0,0,0,0.1); border-top: 3px solid var(--primary-color); border-radius: 50%; width: 30px; height: 30px; margin-bottom: 15px; animation: spin 1s linear infinite;"></div>
+          <p>Загрузка данных профиля...</p>
+        </div>
+      </div>
+    `;
+    const currentStats = document.querySelector('.profile-stats');
+    if (currentStats) {
+      currentStats.style.display = 'none';
+    }
+    try {
+      // Принудительно обновляем данные профиля
+      console.log('🔄 Принудительное обновление данных профиля перед отображением');
+      const profileData = await refreshProfileData();
+      if (!profileData) {
+        console.warn('❌ Не удалось получить данные профиля');
+        throw new Error('Не удалось загрузить данные профиля');
+      }
+      // Обновляем данные интерфейса
+      document.querySelector('.profile-name').textContent = 
+        userData.first_name + (userData.last_name ? ' ' + userData.last_name : '');
+      document.querySelector('.profile-phone').textContent = 
+        userData.username ? `@${userData.username}` : (userData.phone || 'Нет данных');
+      // Аватар
+      const modalAvatar = document.querySelector('.profile-avatar');
+      if (userData.photo_url) {
+        modalAvatar.innerHTML = `<img src="${userData.photo_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+      } else {
+        const initials = userData.first_name.charAt(0) + (userData.last_name ? userData.last_name.charAt(0) : '');
+        modalAvatar.textContent = initials;
+        modalAvatar.style.background = 'linear-gradient(135deg, #000 0%, #333 100%)';
+      }
+      // Статус
+      let status = "Стандарт", statusClass = "";
+      if (profileData.ride_count >= 30) {
+        status = "Платина"; statusClass = "stat-platinum";
+      } else if (profileData.ride_count >= 20) {
+        status = "Золото"; statusClass = "stat-gold";
+      } else if (profileData.ride_count >= 10) {
+        status = "Серебро"; statusClass = "stat-silver";
+      }
+      // Обновляем статус
+      const statusEl = document.querySelector('.stat-value:not(.stat-rating):not(.stat-orders)');
+      if (statusEl) {
+        statusEl.className = 'stat-value ' + statusClass;
+        statusEl.textContent = status;
+      }
+      // Количество заказов
+      const ordersEl = document.querySelector('.stat-orders');
+      if (ordersEl) {
+        ordersEl.textContent = profileData.ride_count || 0;
+      }
+      // Рейтинг с звездами
+      const ratingEl = document.querySelector('.stat-rating');
+      const avgRating = profileData.average_rating || profileData.rating || 0;
+      const fullStars = Math.floor(avgRating);
+      const hasHalfStar = avgRating - fullStars >= 0.5;
+      const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+      let starsHTML = '';
+      for (let i = 0; i < fullStars; i++) starsHTML += '<i class="fas fa-star"></i>';
+      if (hasHalfStar) starsHTML += '<i class="fas fa-star-half-alt"></i>';
+      for (let i = 0; i < emptyStars; i++) starsHTML += '<i class="far fa-star"></i>';
+      ratingEl.innerHTML = `
+        ${starsHTML}
+        <span style="margin-left: 4px;">${avgRating > 0 ? avgRating.toFixed(1) : '—'}</span>
+      `;
+      // Показываем обновленные данные
+      if (currentStats) {
+        currentStats.style.display = 'flex';
+      }
+      console.log('✅ Данные профиля успешно обновлены и отображены');
+    } catch (error) {
+      console.error('❌ Ошибка при загрузке профиля:', error);
+      // Отображаем сообщение об ошибке
+      if (currentStats) {
+        currentStats.innerHTML = `
+          <div style="width: 100%; text-align: center; padding: 20px; color: var(--error-color);">
+            <i class="fas fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px;"></i>
+            <p>Ошибка загрузки данных</p>
+            <p style="font-size: 12px; margin-top: 5px;">${error.message}</p>
+            <button class="retry-profile-btn" style="margin-top: 15px; background: var(--primary-color); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer;">
+              Повторить
+            </button>
+          </div>
+        `;
+        currentStats.style.display = 'block';
+        // Добавляем обработчик для кнопки повтора
+        const retryBtn = document.querySelector('.retry-profile-btn');
+        if (retryBtn) {
+          retryBtn.addEventListener('click', async () => {
+            await showProfileModal();
+          });
+        }
+      }
+    }
+  }
+  function hideProfileModal() {
+    if (!isProfileModalOpen) return;
+    isProfileModalOpen = false;
+    profileModalOverlay.classList.remove('active');
+    profileModal.classList.remove('active');
+    document.body.style.overflow = 'auto';
+  }
+  // ======================
+  // ДОПОЛНИТЕЛЬНЫЕ ФУНКЦИИ ИНИЦИАЛИЗАЦИИ
+  // ======================
+  function initProfileSync() {
+    console.log('⚙️ Инициализация синхронизации профиля');
+    // Автообновление при возврате на вкладку
+    document.addEventListener('visibilitychange', async function() {
+      if (document.visibilityState === 'visible' && localStorage.getItem('isLoggedIn') === 'true') {
+        console.log('🔄 Страница стала видимой. Проверяем необходимость обновления профиля.');
+        const lastUpdate = localStorage.getItem('profileLastUpdate');
+        const now = Date.now();
+        // Обновляем данные если они не обновлялись более 1 минуты
+        if (!lastUpdate || now - parseInt(lastUpdate) > 60000) {
+          console.log('🔄 Данные профиля устарели. Запускаем обновление.');
+          await refreshProfileData();
+        }
+      }
+    });
+    // Первоначальное обновление при загрузке страницы
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+      // Обновляем данные профиля если они не обновлялись более 5 минут
+      const lastUpdate = localStorage.getItem('profileLastUpdate');
+      const now = Date.now();
+      if (!lastUpdate || now - parseInt(lastUpdate) > 300000) {
+        console.log('🔄 Инициализация: данные профиля требуют обновления');
+        refreshProfileData();
+      } else {
+        console.log('✅ Инициализация: данные профиля актуальны');
+      }
+    }
+  }
+  // ======================
+  // WEB INTEGRATION — ЗАМЕНА СТАРОЙ ЛОГИКИ
+  // ======================
+  function initIntegration() {
+    console.log('✅ Web integration initializing...');
+    const elements = {
+      orderButton: document.getElementById('orderButton'),
+      startAddress: document.getElementById('startAddress'),
+      endAddress: document.getElementById('endAddress'),
+      startAddressFull: document.getElementById('startAddressFull'),
+      endAddressFull: document.getElementById('endAddressFull'),
+      routeLoader: document.getElementById('routeLoader'),
+      routeDetails: document.getElementById('routeDetails'),
+      priceDisplay: document.getElementById('priceDisplay'),
+      distanceDisplay: document.getElementById('distanceDisplay'),
+      estimatedTime: document.getElementById('estimatedTime'),
+      calculatedValues: document.getElementById('calculated-values'),
+      orderComment: document.getElementById('orderComment')
+    };
+    const missing = Object.keys(elements).filter(k => !elements[k]);
+    if (missing.length > 0) {
+      console.warn('Missing elements, retrying...', missing);
+      setTimeout(initIntegration, 1000);
+      return;
+    }
+    // Обновление состояния кнопки
+    function updateOrderButtonState() {
+      const start = (elements.startAddressFull.value || elements.startAddress.value).trim();
+      const end = (elements.endAddressFull.value || elements.endAddress.value).trim();
+      if (start && end && start.length > 3 && end.length > 3) {
+        elements.orderButton.disabled = false;
+      } else {
+        elements.orderButton.disabled = true;
+        let msg = "Заполните оба адреса";
+        if (!start && !end) msg = "Укажите адрес отправления и назначения";
+        else if (!start) msg = "Укажите адрес отправления";
+        else if (!end) msg = "Укажите адрес назначения";
+        if (elements.routeDetails) {
+          elements.routeDetails.textContent = msg;
+          elements.routeDetails.className = 'route-details error';
+          elements.routeDetails.style.display = 'block';
+        }
+        if (elements.calculatedValues) elements.calculatedValues.style.display = 'none';
+      }
+    }
+    // Создание заказа
+    async function createOrderViaApi() {
+      const userData = JSON.parse(localStorage.getItem('tg_user'));
+      if (!userData) {
+        alert('Пожалуйста, авторизуйтесь');
+        window.location.href = 'login.html';
+        return;
+      }
+      const activePassengerBtn = document.querySelector('.passenger-btn.active');
+      const passengers = activePassengerBtn ? parseInt(activePassengerBtn.getAttribute('data-passengers'), 10) : 1;
+      const pickup = elements.startAddressFull.value.trim() || elements.startAddress.value.trim();
+      const dropoff = elements.endAddressFull.value.trim() || elements.endAddress.value.trim();
+      const comment = elements.orderComment.value.trim() || '';
+      // Безопасный парсинг цены, расстояния и времени
+      let price = 150, distance = 0, estimatedTime = '15 минут';
+      try {
+        const priceText = elements.priceDisplay.textContent;
+        const distanceText = elements.distanceDisplay.textContent;
+        const timeText = elements.estimatedTime.textContent;
+        // Парсим цену
+        if (priceText && priceText !== '— ₽') {
+          price = parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.')) || 150;
+        }
+        // Парсим расстояние
+        if (distanceText && distanceText !== '— км') {
+          distance = parseFloat(distanceText.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+        }
+        // Парсим время
+        if (timeText && timeText !== 'Рассчитывается' && timeText !== '—') {
+          estimatedTime = timeText;
+        }
+        // Проверяем корректность чисел
+        if (isNaN(price) || price < 0) price = 150;
+        if (isNaN(distance) || distance < 0) distance = 0;
+      } catch (e) {
+        console.warn('Ошибка парсинга данных маршрута:', e);
+        price = 150;
+        distance = 0;
+        estimatedTime = '15 минут';
+      }
+      if (!pickup || !dropoff) {
+        alert('Заполните оба адреса');
+        return;
+      }
+      // Проверяем, готов ли маршрут
+      if (!isRouteReady) {
+        alert('Маршрут еще рассчитывается, пожалуйста, подождите.');
+        return;
+      }
+      try {
+        elements.orderButton.disabled = true;
+        elements.routeLoader.classList.add('active');
+        elements.routeLoader.textContent = 'Создание заказа...';
+        elements.routeLoader.style.display = 'block';
+        // Формируем координаты для передачи на сервер
+        const pickupCoords = startMarker.geometry.getCoordinates();
+        const dropoffCoords = endMarker.geometry.getCoordinates();
+        const orderPayload = {
+          client_id: userData.id,
+          pickup_address: pickup,
+          dropoff_address: dropoff,
+          comment: comment,
+          passengers: passengers,
+          price: price,
+          distance_km: distance,
+          estimated_time_min: estimatedTime,
+          pickup_lat: pickupCoords[0],
+          pickup_lon: pickupCoords[1],
+          dropoff_lat: dropoffCoords[0],
+          dropoff_lon: dropoffCoords[1]
+        };
+        // Сохраняем данные заказа во временное хранилище для восстановления
+        const tempOrderData = {
+          ...orderPayload,
+          timestamp: Date.now()
+        };
+        localStorage.setItem('last_order_data', JSON.stringify(tempOrderData));
+        
+        const res = await fetch(`${API_BASE_URL}/api/web/order/create`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderPayload)
+        });
+        
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(`Ошибка сервера: ${res.status} ${err.detail || res.statusText || 'Неизвестная ошибка'}`);
+        }
+        
+        const result = await res.json();
+        
+        if (result.success && result.order_id) {
+          console.log('✅ Заказ успешно создан. Обновляем данные профиля.');
+          
+          // Обновляем данные профиля после успешного заказа
+          await refreshProfileData();
+          
+          // Если модальное окно профиля открыто, обновляем его
+          if (isProfileModalOpen) {
+            console.log('🔄 Обновляем данные в открытом модальном окне профиля');
+            await showProfileModal();
+          }
+          
+          // Показываем модальное окно поиска водителя
+          showSearchDriverModal(result.order_id, {
+            pickup_address: pickup,
+            dropoff_address: dropoff,
+            price: price,
+            distance_km: distance,
+            estimated_time_min: estimatedTime,
+            passengers: passengers,
+            pickup_lat: pickupCoords[0],
+            pickup_lon: pickupCoords[1],
+            dropoff_lat: dropoffCoords[0],
+            dropoff_lon: dropoffCoords[1]
+          });
+          
+          // Сохраняем данные для возможного восстановления
+          const backupOrderData = {
+            orderId: result.order_id,
+            pickupAddress: pickup,
+            dropoffAddress: dropoff,
+            price: price,
+            distanceKm: distance,
+            estimatedTime: estimatedTime,
+            passengers: passengers,
+            createdAt: new Date().toISOString(),
+            status: 'searching'
+          };
+          localStorage.setItem('backup_active_order', JSON.stringify(backupOrderData));
+        } else {
+          throw new Error(result.message || 'Ошибка создания заказа: сервер вернул неудачный ответ');
+        }
+      } catch (err) {
+        console.error('Ошибка создания заказа:', err);
+        alert(`Ошибка создания заказа: ${err.message}`);
+      } finally {
+        elements.orderButton.disabled = false;
+        elements.routeLoader.classList.remove('active');
+        elements.routeLoader.style.display = 'none';
+      }
+    }
+    
+    // Обновление обработчика кнопки
+    function replaceOrderHandler() {
+      if (elements.orderButton) {
+        const clone = elements.orderButton.cloneNode(true);
+        elements.orderButton.parentNode.replaceChild(clone, elements.orderButton);
+        elements.orderButton = document.getElementById('orderButton');
+        elements.orderButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          createOrderViaApi();
+        });
+      }
+    }
+    
+    // Слушатели ввода
+    [elements.startAddress, elements.endAddress, elements.startAddressFull, elements.endAddressFull].forEach(el => {
+      if (el) el.addEventListener('input', () => setTimeout(updateOrderButtonState, 100));
+    });
+    
+    // Запуск
+    replaceOrderHandler();
+    setInterval(updateOrderButtonState, 5000);
+    setTimeout(updateOrderButtonState, 300);
+    
+    // Добавляем синхронизацию профиля в конце инициализации
+    initProfileSync();
+    
+    console.log('✅ Web integration fully initialized with profile sync');
+  }
+  
+  // Обработчик для принудительного обновления при открытии профиля
+  profileAvatar.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (localStorage.getItem('isLoggedIn') === 'true') {
+      showProfileModal();
+    } else {
+      window.location.href = 'login.html';
+    }
+  });
+  
+  // ======================
+  // ЗАПУСК ПРИЛОЖЕНИЯ
+  // ======================
+  document.addEventListener('DOMContentLoaded', function() {
+    checkAuth();
+    window.addEventListener('popstate', function() {
+      if (localStorage.getItem('isLoggedIn') !== 'true') {
+        window.location.href = 'login.html';
+      }
+    });
+    
+    // Настройка UI-элементов
+    profileModalOverlay.addEventListener('click', hideProfileModal);
+    historyModalClose.addEventListener('click', hideHistoryModal);
+    historyModalOverlay.addEventListener('click', hideHistoryModal);
+    searchDriverModalOverlay.addEventListener('click', function(e) {
+      // Нельзя закрыть модальное окно поиска кликом на оверлей
+      // Это требование, чтобы пользователь явно отменил или дождался поиска
+    });
+    
+    // Инициализация UI
+    calculatedValues.style.display = 'none';
+    document.querySelector('.price-placeholder').style.display = 'block';
+    document.querySelector('.distance-placeholder').style.display = 'block';
+    startInput.value = '';
+    endInput.value = '';
+    startInputFull.value = '';
+    endInputFull.value = '';
+    
+    // Настройка обработчиков событий
+    setupEventListeners();
+  });
+  
+  function setupEventListeners() {
+    retryLocationBtn.addEventListener('click', retryLocation);
+    startInput.addEventListener('input', function() {
+      if (this.value.trim() === '') {
+        startInputFull.value = '';
+        clearRoute();
+      }
+    });
+    endInput.addEventListener('input', function() {
+      if (this.value.trim() === '') {
+        endInputFull.value = '';
+        clearRoute();
+      }
+    });
+  }
+</script>
+</body>
+</html>

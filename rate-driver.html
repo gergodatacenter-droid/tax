@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#000000">
+  <title>Такси Барс - Оцените водителя</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #000;
+      --primary-dark: #1a1a1a;
+      --background-light: #f8f9fa;
+      --background-medium: #f0f0f0;
+      --border-color: #d9d9d9;
+      --text-color: #212121;
+      --text-secondary: #616161;
+      --card-bg: #ffffff;
+      --shadow-light: rgba(0, 0, 0, 0.03);
+      --shadow-medium: rgba(0, 0, 0, 0.08);
+      --shadow-heavy: rgba(0, 0, 0, 0.15);
+      --error-color: #d32f2f;
+      --success-color: #2e7d32;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    body {
+      background-color: var(--background-light);
+      color: var(--text-color);
+      line-height: 1.5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 0;
+      overflow-x: hidden;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
+    .container {
+      max-width: 480px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 12px var(--shadow-light);
+      position: relative;
+      margin: 10px;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 20px);
+      max-height: 800px;
+      border: 1px solid var(--border-color);
+    }
+    .header {
+      padding: 16px;
+      border-bottom: 1px solid var(--border-color);
+      background: var(--card-bg);
+      text-align: center;
+    }
+    .header-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+    .driver-info {
+      padding: 24px 16px;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .driver-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-color) 0%, #333 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: bold;
+      margin: 0 auto 16px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .driver-name {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-color);
+      margin-bottom: 8px;
+    }
+    .car-info {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+    .rating-section {
+      padding: 24px 16px;
+      text-align: center;
+    }
+    .rating-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 16px;
+    }
+    .stars-container {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .star {
+      font-size: 36px;
+      color: #e0e0e0;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    .star:hover {
+      transform: scale(1.2);
+    }
+    .star.selected {
+      color: #ffc107;
+    }
+    .rating-hint {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 8px;
+    }
+    .comment-section {
+      padding: 0 16px;
+      display: none;
+    }
+    .comment-section.active {
+      display: block;
+    }
+    .comment-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    .comment-input {
+      width: 100%;
+      min-height: 100px;
+      padding: 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      font-size: 15px;
+      resize: vertical;
+      background: var(--background-light);
+      transition: border-color 0.2s;
+    }
+    .comment-input:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+    }
+    .comment-warning {
+      font-size: 13px;
+      color: var(--error-color);
+      margin-top: 8px;
+      display: none;
+    }
+    .comment-warning.active {
+      display: block;
+    }
+    .footer {
+      padding: 16px;
+      border-top: 1px solid var(--border-color);
+      background: var(--card-bg);
+      text-align: center;
+    }
+    .submit-btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 16px;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .submit-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    }
+    .submit-btn:disabled {
+      background: var(--background-medium);
+      color: var(--text-secondary);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    .temp-notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #000;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 10px;
+      z-index: 10000;
+      font-weight: 500;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      animation: slideDown 0.3s ease;
+    }
+    @keyframes slideDown {
+      from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+      to { transform: translateX(-50%) translateY(0); opacity: 1; }
+    }
+    @keyframes slideUp {
+      from { transform: translateX(-50%) translateY(0); opacity: 1; }
+      to { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+    }
+    @media (max-width: 480px) {
+      .container {
+        margin: 5px;
+        border-radius: 14px;
+      }
+      .driver-avatar {
+        width: 70px;
+        height: 70px;
+        font-size: 28px;
+      }
+      .driver-name {
+        font-size: 22px;
+      }
+      .star {
+        font-size: 32px;
+      }
+    }
+    @media (max-height: 650px) {
+      .container {
+        height: auto;
+        max-height: 90vh;
+      }
+      .rating-section {
+        padding: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-title">Оцените водителя</div>
+    </div>
+    
+    <div class="driver-info">
+      <div class="driver-avatar" id="driverAvatar">В</div>
+      <div class="driver-name" id="driverName">Водитель</div>
+      <div class="car-info" id="carInfo">Автомобиль</div>
+      <div class="rating-display" id="currentRating">Рейтинг: —</div>
+    </div>
+    
+    <div class="rating-section">
+      <div class="rating-title">Поставьте оценку от 1 до 5</div>
+      <div class="stars-container" id="starsContainer">
+        <i class="fas fa-star star" data-value="1"></i>
+        <i class="fas fa-star star" data-value="2"></i>
+        <i class="fas fa-star star" data-value="3"></i>
+        <i class="fas fa-star star" data-value="4"></i>
+        <i class="fas fa-star star" data-value="5"></i>
+      </div>
+      <div class="rating-hint" id="ratingHint">Нажмите на звезду, чтобы оценить</div>
+    </div>
+    
+    <div class="comment-section" id="commentSection">
+      <div class="comment-label">📋 Пожалуйста, кратко укажите причину (1–2 предложения):</div>
+      <textarea class="comment-input" id="commentInput" placeholder="Например: водитель опоздал на 15 минут или грубо общался"></textarea>
+      <div class="comment-warning" id="commentWarning">⚠️ Пожалуйста, заполните это поле</div>
+    </div>
+    
+    <div class="footer">
+      <button class="submit-btn" id="submitBtn" disabled>
+        <i class="fas fa-paper-plane"></i>
+        <span>ОТПРАВИТЬ ОЦЕНКУ</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // API base URL
+      const API_BASE_URL = window.location.hostname === 'localhost' ? 
+        'http://localhost:8004' : 'https://taxibarsnz24.ru';
+      
+      // Получаем данные о заказе из localStorage
+      const orderData = JSON.parse(localStorage.getItem('orderForRating'));
+      if (!orderData || !orderData.orderId) {
+        alert('Нет данных о заказе. Вернитесь на главную страницу.');
+        window.location.href = 'main.html';
+        return;
+      }
+      
+      console.log('Данные для оценки:', orderData);
+      
+      // DOM элементы
+      const driverAvatar = document.getElementById('driverAvatar');
+      const driverName = document.getElementById('driverName');
+      const carInfo = document.getElementById('carInfo');
+      const currentRating = document.getElementById('currentRating');
+      const stars = document.querySelectorAll('.star');
+      const ratingHint = document.getElementById('ratingHint');
+      const commentSection = document.getElementById('commentSection');
+      const commentInput = document.getElementById('commentInput');
+      const commentWarning = document.getElementById('commentWarning');
+      const submitBtn = document.getElementById('submitBtn');
+      
+      // Переменные для работы
+      let selectedRating = 0;
+      let isSubmitting = false;
+      
+      // Инициализация данных
+      function initializePage() {
+        // Заполняем данными о водителе
+        driverName.textContent = orderData.driverName || 'Водитель';
+        driverAvatar.textContent = orderData.driverInitials || orderData.driverName?.charAt(0) || 'В';
+        
+        // Формируем информацию об автомобиле
+        const carBrand = orderData.carBrand || 'Автомобиль';
+        const carNumber = orderData.carNumber ? ` (${orderData.carNumber})` : '';
+        carInfo.textContent = `${carBrand}${carNumber}`;
+        
+        // Отображаем текущий рейтинг водителя (если есть)
+        const driverRating = orderData.driverRating || 4.8;
+        currentRating.textContent = `Рейтинг: ${driverRating.toFixed(1)}`;
+      }
+      
+      // Обработчики звезд
+      stars.forEach(star => {
+        star.addEventListener('click', () => {
+          handleStarClick(parseInt(star.dataset.value));
+        });
+        
+        star.addEventListener('mouseover', () => {
+          const value = parseInt(star.dataset.value);
+          highlightStars(value);
+        });
+        
+        star.addEventListener('mouseout', () => {
+          highlightStars(selectedRating);
+        });
+      });
+      
+      // Обработка клика по звезде
+      function handleStarClick(value) {
+        selectedRating = value;
+        updateStarsDisplay();
+        
+        // Если оценка 3 и ниже - показываем поле для комментария
+        if (value <= 3) {
+          commentSection.classList.add('active');
+          commentInput.focus();
+        } else {
+          commentSection.classList.remove('active');
+        }
+        
+        // Активируем кнопку отправки
+        submitBtn.disabled = false;
+        
+        // Обновляем подсказку
+        if (value === 1) ratingHint.textContent = 'Очень плохо';
+        else if (value === 2) ratingHint.textContent = 'Плохо';
+        else if (value === 3) ratingHint.textContent = 'Удовлетворительно';
+        else if (value === 4) ratingHint.textContent = 'Хорошо';
+        else if (value === 5) ratingHint.textContent = 'Отлично';
+      }
+      
+      // Подсветка звезд
+      function highlightStars(value) {
+        stars.forEach((star, index) => {
+          if (index < value) {
+            star.classList.add('selected');
+          } else {
+            star.classList.remove('selected');
+          }
+        });
+      }
+      
+      // Обновление отображения звезд
+      function updateStarsDisplay() {
+        stars.forEach((star, index) => {
+          if (index < selectedRating) {
+            star.classList.add('selected');
+          } else {
+            star.classList.remove('selected');
+          }
+        });
+      }
+      
+      // Показ временного уведомления
+      function showNotification(message, isError = false) {
+        const notification = document.createElement('div');
+        notification.className = 'temp-notification';
+        notification.textContent = message;
+        notification.style.background = isError ? '#d32f2f' : '#000';
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.style.animation = 'slideUp 0.3s ease';
+          setTimeout(() => {
+            if (document.body.contains(notification)) {
+              document.body.removeChild(notification);
+            }
+          }, 300);
+        }, 3000);
+      }
+      
+      // Отправка оценки на сервер
+      async function submitRating() {
+        if (isSubmitting) return;
+        
+        // Проверка на низкую оценку без комментария
+        if (selectedRating <= 3 && !commentInput.value.trim()) {
+          commentWarning.classList.add('active');
+          commentInput.focus();
+          return;
+        }
+        
+        isSubmitting = true;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>ОТПРАВКА...</span>';
+        
+        try {
+          // Получаем данные пользователя
+          const userData = JSON.parse(localStorage.getItem('tg_user'));
+          if (!userData) {
+            throw new Error('Пользователь не авторизован');
+          }
+          
+          // Формируем данные для отправки
+          const ratingData = {
+            order_id: orderData.orderId,
+            rater_id: userData.id,
+            target_id: orderData.driverId,
+            rating: selectedRating,
+            comment: selectedRating <= 3 ? commentInput.value.trim() : ''
+          };
+          
+          console.log('Отправка рейтинга:', ratingData);
+          
+          // Отправляем на сервер
+          const response = await fetch(`${API_BASE_URL}/api/web/rating/submit`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(ratingData)
+          });
+          
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            throw new Error(`Ошибка сервера: ${response.status} ${errorData?.detail || response.statusText || 'Неизвестная ошибка'}`);
+          }
+          
+          const result = await response.json();
+          
+          if (result.success) {
+            showNotification('✅ Спасибо за вашу оценку!', false);
+            
+            // Сохраняем данные в историю
+            saveOrderToHistory(orderData);
+            
+            // Удаляем данные активного заказа
+            localStorage.removeItem('orderForRating');
+            
+            // Через 2 секунды переходим на главную
+            setTimeout(() => {
+              window.location.href = 'main.html';
+            }, 2000);
+          } else {
+            throw new Error(result.message || 'Не удалось отправить оценку');
+          }
+        } catch (error) {
+          console.error('Ошибка при отправке оценки:', error);
+          showNotification(`❌ ${error.message}`, true);
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> <span>ОТПРАВИТЬ ОЦЕНКУ</span>';
+        } finally {
+          isSubmitting = false;
+        }
+      }
+      
+      // Сохранение заказа в историю
+      function saveOrderToHistory(orderData) {
+        const history = JSON.parse(localStorage.getItem('orderHistory')) || [];
+        
+        const completedOrder = {
+          id: `order_${Date.now()}`,
+          date: new Date().toLocaleDateString('ru-RU', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          }),
+          from: orderData.pickupAddress,
+          to: orderData.dropoffAddress,
+          price: `${orderData.price} ₽`,
+          distance: orderData.distanceKm || '—',
+          status: 'completed',
+          driver: orderData.driverName,
+          order_id: orderData.orderId,
+          rating: selectedRating,
+          has_comment: selectedRating <= 3 && commentInput.value.trim() !== ''
+        };
+        
+        history.unshift(completedOrder);
+        if (history.length > 10) history.pop();
+        
+        localStorage.setItem('orderHistory', JSON.stringify(history));
+      }
+      
+      // Обработка ввода комментария
+      commentInput.addEventListener('input', () => {
+        if (commentInput.value.trim()) {
+          commentWarning.classList.remove('active');
+        }
+      });
+      
+      // Обработка отправки формы
+      submitBtn.addEventListener('click', submitRating);
+      
+      // Обработка нажатия Enter
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          if (commentSection.classList.contains('active') && document.activeElement === commentInput) {
+            e.preventDefault();
+            submitRating();
+          }
+        }
+      });
+      
+      // Инициализация страницы
+      initializePage();
+    });
+  </script>
+</body>
+</html>

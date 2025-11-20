@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#000000">
+<!-- Иконка для iOS (обязательно) -->
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+
+<!-- Запрет масштабирования (опционально, для "приложения") -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+<!-- Запуск как полноценное приложение на iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+<!-- Скрыть строку состояния (белая / чёрная) -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+<!-- Название на iOS -->
+  <meta name="apple-mobile-web-app-title" content="Такси Барс">
+  <title>Такси Барс - Вход</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #000000;
+      --accent-color: #000000;
+      --background: #f5f7fa;
+      --card-bg: #ffffff;
+      --text-primary: #212121;
+      --text-secondary: #546e7a;
+      --border-color: #e0e0e0;
+      --shadow-light: rgba(0, 0, 0, 0.05);
+      --shadow-medium: rgba(0, 0, 0, 0.08);
+      --error-color: #d32f2f;
+      --success-color: #4caf50;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    body {
+      background-color: var(--background);
+      color: var(--text-primary);
+      line-height: 1.6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 0;
+      overflow-x: hidden;
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
+    .auth-container {
+      max-width: 420px;
+      width: 100%;
+      background: var(--card-bg);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 
+        0 6px 15px var(--shadow-light),
+        0 1px 2px var(--shadow-medium);
+      position: relative;
+      margin: 20px;
+      border: 1px solid var(--border-color);
+    }
+    .auth-content {
+      padding: 36px 24px 30px;
+      text-align: center;
+      min-height: calc(100vh - 200px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .app-title {
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+    .app-title-main {
+      font-size: 38px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: block;
+      letter-spacing: -1px;
+      position: relative;
+    }
+    .app-title-main::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 2px;
+      background: var(--accent-color);
+    }
+    .app-title-sub {
+      font-size: 24px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-top: 8px;
+      opacity: 0.9;
+    }
+    .subtitle {
+      font-size: 15px;
+      color: var(--text-secondary);
+      margin-bottom: 30px;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.5;
+      letter-spacing: 0.2px;
+    }
+    .telegram-login-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-top: 12px;
+    }
+    /* Стили для Telegram Login Widget */
+    .tgLogin {
+      border: none !important;
+      padding: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      border-radius: 12px !important;
+      overflow: hidden;
+      margin: 0 auto !important;
+    }
+
+    .tgLogin > div {
+      border-radius: 12px !important;
+      box-shadow: 0 4px 10px var(--shadow-light) !important;
+      border: 1px solid var(--border-color) !important;
+    }
+
+    .tgLogin > div > div {
+      background: #212121 !important;
+      color: white !important;
+      border: none !important;
+      border-radius: 12px !important;
+      padding: 12px 20px !important;
+      font-size: 16px !important;
+      font-weight: 500 !important;
+      width: 100% !important;
+      max-width: 300px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    .tgLogin > div > div:hover {
+      background: #0a3a85 !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 4px 10px rgba(13, 71, 161, 0.3) !important;
+    }
+
+    .tgLogin > div > div:active {
+      transform: translateY(0) !important;
+    }
+
+    .tgLogin > div > div > i {
+      font-size: 20px !important;
+      margin-right: 10px !important;
+    }
+    
+    .auth-footer {
+      padding: 18px 24px;
+      text-align: center;
+      border-top: 1px solid var(--border-color);
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .policy-link {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 500;
+      display: inline;
+      position: relative;
+      transition: all 0.15s ease;
+    }
+    .policy-link:hover {
+      text-decoration: underline;
+    }
+    .loader-container {
+      display: none;
+      justify-content: center;
+      align-items: center;
+      margin-top: 24px;
+    }
+    .spinner {
+      border: 3px solid rgba(13, 71, 161, 0.2);
+      border-top: 3px solid var(--primary-color);
+      border-radius: 50%;
+      width: 30px;
+      height: 30px;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .loader-text {
+      color: var(--text-secondary);
+      font-size: 14px;
+    }
+    .error-message {
+      color: var(--error-color);
+      background: rgba(211, 47, 47, 0.08);
+      border: 1px solid var(--error-color);
+      border-radius: 8px;
+      padding: 12px;
+      margin: 16px 0;
+      font-size: 14px;
+      display: none;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .success-message {
+      color: var(--success-color);
+      background: rgba(76, 175, 80, 0.08);
+      border: 1px solid var(--success-color);
+      border-radius: 8px;
+      padding: 12px;
+      margin: 16px 0;
+      font-size: 14px;
+      display: none;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .taxi-icon {
+      font-size: 36px;
+      color: var(--primary-color);
+      margin-bottom: 12px;
+      opacity: 0.9;
+      position: relative;
+    }
+    .taxi-icon::after {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 30px;
+      height: 1px;
+      background: var(--accent-color);
+    }
+    @media (max-width: 480px) {
+      .auth-content {
+        padding: 30px 16px 20px;
+      }
+      .app-title-main {
+        font-size: 34px;
+      }
+      .app-title-sub {
+        font-size: 20px;
+      }
+      .subtitle {
+        font-size: 14px;
+        margin-bottom: 24px;
+      }
+      .auth-footer {
+        font-size: 11px;
+        padding: 16px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container" id="authContainer">
+    
+    <div class="auth-content">
+      <div class="taxi-icon">
+        <i class="fas fa-taxi"></i>
+      </div>
+      
+      <h1 class="app-title">
+        <span class="app-title-main">ТАКСИ БАРС</span>
+        <span class="app-title-sub">Добро пожаловать!</span>
+      </h1>
+      <p class="subtitle">Ваше время - наша главная ценность</p>
+      
+      <div class="error-message" id="errorMessage"></div>
+      <div class="success-message" id="successMessage"></div>
+      
+      <div class="telegram-login-container" id="telegramWidgetContainer">
+        <!-- Telegram Login Widget будет добавлен здесь -->
+      </div>
+      
+      <div class="loader-container" id="loaderContainer">
+        <div class="spinner"></div>
+        <div class="loader-text">Проверка авторизации...</div>
+      </div>
+    </div>
+    
+    <div class="auth-footer">
+      Нажимая "Войти через Telegram", вы соглашаетесь с 
+      <a href="#" class="policy-link">Пользовательским соглашением</a> и 
+      <a href="#" class="policy-link">Политикой конфиденциальности</a>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const telegramLoginWidget = document.getElementById('telegramWidgetContainer');
+      const loaderContainer = document.getElementById('loaderContainer');
+      const errorMessage = document.getElementById('errorMessage');
+      const successMessage = document.getElementById('successMessage');
+      
+      // Проверяем, есть ли уже активная сессия
+      if (localStorage.getItem('tg_user') && localStorage.getItem('isLoggedIn') === 'true') {
+        showSuccess('Вы уже авторизованы!');
+        setTimeout(() => {
+          window.location.href = 'main.html';
+        }, 1500);
+        return;
+      }
+      
+      // Создаем Telegram Login Widget
+      const botUsername = 'TaxiBarsBot'; // ЗАМЕНИТЕ НА ИМЯ ВАШЕГО БОТА
+      const authUrl = `${window.location.origin}/login.html`; // URL для возврата
+      
+      // Очищаем параметры URL после перенаправления от Telegram
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has('hash')) {
+        // Собираем все параметры авторизации
+        const authParams = {};
+        for (const [key, value] of urlParams.entries()) {
+          authParams[key] = value;
+        }
+        
+        // Показываем лоадер
+        loaderContainer.style.display = 'flex';
+        
+        // Эмулируем проверку на сервере
+        setTimeout(() => {
+          const isValid = verifyTelegramAuthorization(authParams);
+          if (isValid) {
+            // Сохраняем данные пользователя
+            const userData = {
+              id: authParams.id,
+              first_name: authParams.first_name,
+              last_name: authParams.last_name || '',
+              username: authParams.username || '',
+              photo_url: authParams.photo_url || '',
+              auth_date: parseInt(authParams.auth_date),
+              hash: authParams.hash
+            };
+            
+            localStorage.setItem('tg_user', JSON.stringify(userData));
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('sessionExpiry', Date.now() + 24 * 60 * 60 * 1000); // 24 часа
+            
+            showSuccess(`Добро пожаловать, ${userData.first_name}!`);
+            
+            // Перенаправляем после успешной авторизации
+            setTimeout(() => {
+              window.location.href = 'main.html';
+            }, 1000);
+          } else {
+            showError('Ошибка авторизации. Попробуйте еще раз.');
+            loaderContainer.style.display = 'none';
+            
+            // Очищаем параметры из URL
+            history.replaceState({}, document.title, window.location.pathname);
+          }
+        }, 1000);
+      }
+      
+      // Функция для отображения сообщений
+      function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = 'block';
+        successMessage.style.display = 'none';
+      }
+      
+      function showSuccess(message) {
+        successMessage.textContent = message;
+        successMessage.style.display = 'block';
+        errorMessage.style.display = 'none';
+      }
+      
+      // Эмуляция проверки подписи Telegram
+      function verifyTelegramAuthorization(params) {
+        // В реальном приложении здесь должен быть запрос к вашему серверу
+        // для проверки подписи
+        
+        // Для демонстрации мы проверяем минимальные требования
+        if (!params.hash || !params.id || !params.auth_date) {
+          return false;
+        }
+        
+        // Проверяем, не истекла ли сессия (срок действия 1 день)
+        const authDate = parseInt(params.auth_date) * 1000;
+        const now = Date.now();
+        if (now - authDate > 24 * 60 * 60 * 1000) {
+          return false;
+        }
+        
+        // В реальном приложении здесь:
+        // 1. Собираем все параметры кроме hash
+        // 2. Сортируем по ключам
+        // 3. Создаем строку вида "ключ1=значение1\nключ2=значение2"
+        // 4. Вычисляем хэш с помощью секретного ключа бота
+        // 5. Сравниваем с полученным hash
+        
+        // Здесь мы просто возвращаем true для демонстрации
+        return true;
+      }
+      
+      // Функция для повторного входа
+      function retryLogin() {
+        // Очищаем параметры из URL
+        history.replaceState({}, document.title, window.location.pathname);
+        loaderContainer.style.display = 'none';
+        errorMessage.style.display = 'none';
+        
+        // Пересоздаем виджет
+        telegramLoginWidget.innerHTML = '';
+        createTelegramLoginWidget();
+      }
+      
+      // Создаем Telegram Login Widget
+      function createTelegramLoginWidget() {
+        // Очищаем контейнер перед добавлением виджета
+        telegramLoginWidget.innerHTML = '';
+        
+        // Создаем скрипт для загрузки Telegram Widget
+        const script = document.createElement('script');
+        script.async = true;
+        script.src = 'https://telegram.org/js/telegram-widget.js?22';
+        script.setAttribute('data-telegram-login', botUsername);
+        script.setAttribute('data-size', 'large');
+        script.setAttribute('data-auth-url', authUrl.trim());
+        script.setAttribute('data-request-access', 'write');
+        script.setAttribute('data-radius', '10');
+        
+        // Добавляем обработчик ошибок загрузки виджета
+        script.onerror = function() {
+          showError('Ошибка загрузки Telegram Login Widget. Проверьте подключение к интернету.');
+        };
+        
+        // Добавляем скрипт в контейнер
+        telegramLoginWidget.appendChild(script);
+      }
+      
+      // Инициализируем виджет
+      createTelegramLoginWidget();
+      
+      // Добавляем обработчик для кнопки "Назад" в браузере
+      window.addEventListener('popstate', function() {
+        if (localStorage.getItem('isLoggedIn') === 'true') {
+          window.location.href = 'main.html';
+        }
+      });
+      
+      // Проверяем истечение сессии при загрузке страницы
+      const sessionExpiry = localStorage.getItem('sessionExpiry');
+      if (sessionExpiry && Date.now() > parseInt(sessionExpiry)) {
+        localStorage.removeItem('tg_user');
+        localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('sessionExpiry');
+        showError('Сессия истекла. Пожалуйста, войдите снова.');
+      }
+    });
+  </script>
+</body>
+</html>

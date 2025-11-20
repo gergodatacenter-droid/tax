@@ -444,7 +444,7 @@ async def get_bids_for_order(order_id: int):
 async def accept_bid(order_id: int, driver_id: int):
     """Клиент выбирает водителя. Возвращает True, если успешно."""
     async with aiosqlite.connect(DB_PATH) as db:
-        # Проверяем, не выбран ли уже водитель
+        # Проверяем, не выбран ли уже водитель на этот заказ
         async with db.execute("SELECT driver_id FROM orders WHERE id = ? AND status = 'pending'", (order_id,)) as cursor:
             row = await cursor.fetchone()
             if not row or row[0] is not None:

@@ -423,6 +423,13 @@ async def accept_driver(order_id: int, data: AcceptDriverRequest):
         if not order:
             raise HTTPException(status_code=404, detail="Заказ не найден")
 
+        # Проверяем, не занят ли водитель другим активным заказом
+        async with aiosqlite.connect(DB_PATH) as db:
+            async with db.execute("SELECT id FROM orders WHERE driver_id = ? AND status = 'accepted'", (data.driver_id,)) as cursor:
+                active_orders = await cursor.fetchall()
+                if active_orders:
+                    raise HTTPException(status_code=400, detail="Водитель уже выполняет другой заказ. Пожалуйста выберите другого.")
+
         from database import accept_bid
         success = await accept_bid(order_id, data.driver_id)
         if not success:
@@ -485,6 +492,9 @@ async def accept_driver(order_id: int, data: AcceptDriverRequest):
             logger.error(f"❌ Координаты не найдены в _TEMP_ORDER_DATA для заказа {order_id}. Данные: {temp}")
 
         return {"success": True, "message": "Водитель принят"}
+    except HTTPException:
+        # Перебрасываем HTTP-исключения как есть
+        raise
     except Exception as e:
         logger.error(f"❌ КРИТИЧЕСКАЯ ОШИБКА при принятии водителя: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

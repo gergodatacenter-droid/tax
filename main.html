@@ -3023,7 +3023,12 @@ function getTrafficLevel(route) {
       }
     } catch (err) {
       console.error('Driver selection failed:', err);
-      alert(`Ошибка: ${err.message}`);
+      // Проверяем специфическое сообщение об ошибке от сервера
+      if (err.message.includes('Водитель уже выполняет другой заказ')) {
+        alert('Водитель уже выполняет другой заказ. Пожалуйста выберите другого.');
+      } else {
+        alert(`Ошибка: ${err.message}`);
+      }
     } finally {
       const loader = document.getElementById('routeLoader');
       loader.classList.remove('active');

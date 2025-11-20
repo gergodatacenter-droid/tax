@@ -760,14 +760,21 @@ async def get_user_profile(user_id: int):
                 row = await cursor.fetchone()
                 avg_rating = round(row[0], 1) if row and row[0] is not None else 0.0
 
-            # Количество поездок (за всё время или за месяц — как вы хотите)
+            # Общее количество завершенных поездок (за всё время)
             async with db.execute("SELECT COUNT(*) FROM orders WHERE client_id = ? AND status = 'completed'", (user_id,)) as cursor:
                 row = await cursor.fetchone()
-                ride_count = row[0] if row else 0
+                total_ride_count = row[0] if row else 0
+
+            # Количество поездок за текущий месяц (для определения статуса)
+            current_month = datetime.now().strftime("%Y-%m")
+            async with db.execute("SELECT ride_count FROM monthly_rides WHERE user_id = ? AND year_month = ?", (user_id, current_month)) as cursor:
+                row = await cursor.fetchone()
+                monthly_ride_count = row[0] if row else 0
 
         return {
             "success": True,
-            "ride_count": ride_count,
+            "ride_count": total_ride_count,  # Общее количество поездок за всё время
+            "monthly_ride_count": monthly_ride_count,  # Количество поездок за текущий месяц
             "rating": avg_rating
         }
     except Exception as e:

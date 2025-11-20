@@ -136,6 +136,18 @@ async def send_telegram_message(chat_id: int, text: str, reply_markup=None):
                     reply_markup = None
             
             if reply_markup:
+                # Recursively convert any nested objects that might not be JSON serializable
+                def convert_objects(obj):
+                    if hasattr(obj, 'to_dict'):
+                        return obj.to_dict()
+                    elif isinstance(obj, dict):
+                        return {key: convert_objects(value) for key, value in obj.items()}
+                    elif isinstance(obj, list):
+                        return [convert_objects(item) for item in obj]
+                    else:
+                        return obj
+                
+                reply_markup = convert_objects(reply_markup)
                 payload["reply_markup"] = json.dumps(reply_markup, ensure_ascii=False)
 
         logger.debug(f"📤 Отправка сообщения на {TELEGRAM_API_URL}/sendMessage")

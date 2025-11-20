@@ -583,21 +583,55 @@ async def cancel_order_api(order_id: int, cancel_data: CancelOrderRequest):
 @app.post("/api/web/order/{order_id}/complete")
 async def complete_order_api(order_id: int):
     try:
-        from database import complete_order
+        from database import complete_order, has_user_rated
+        from keyboards import rating_keyboard
+        from main import bot
         await complete_order(order_id)
-
+        
         # Используем ЛОКАЛЬНУЮ функцию get_order вместо импортированной
         order = await get_order(order_id)
         logger.info(f"Данные заказа после завершения: {order}")
 
         if order and order.get("driver_id"):
             driver_id = order["driver_id"]
+            client_id = order["client_id"]
+            
             # Уведомляем водителя об успешном завершении
             await send_telegram_message(
                 driver_id,
                 f"🎉 Заказ №{order_id} успешно завершен! Спасибо за работу."
             )
             logger.info(f"✅ Уведомление о завершении отправлено водителю {driver_id}")
+            
+            # Отправляем запрос на оценку водителя клиенту (аналогично Telegram-версии)
+            already_client_rated = await has_user_rated(order_id, client_id)
+            if not already_client_rated:
+                try:
+                    await bot.send_message(
+                        client_id,
+                        f"🏁 Заказ №{order_id} завершён! Пожалуйста, оцените водителя:",
+                        reply_markup=rating_keyboard(driver_id, order_id)
+                    )
+                    logger.info(f"✅ Запрос на оценку водителя отправлен клиенту {client_id}")
+                except Exception as e:
+                    logger.warning(f"Не удалось отправить запрос на оценку клиенту {client_id}: {e}")
+            
+            # Отправляем запрос на оценку клиента водителю (если водитель еще не оценил)
+            already_driver_rated = await has_user_rated(order_id, driver_id)
+            if not already_driver_rated:
+                try:
+                    await send_telegram_message(
+                        driver_id,
+                        f"🏁 Заказ №{order_id} завершён. Оцените клиента:"
+                    )
+                    await send_telegram_message(
+                        driver_id,
+                        "Поставьте оценку клиенту от 1 до 5:",
+                        reply_markup=rating_keyboard(client_id, order_id)
+                    )
+                    logger.info(f"✅ Запрос на оценку клиента отправлен водителю {driver_id}")
+                except Exception as e:
+                    logger.warning(f"Не удалось отправить запрос на оценку водителю {driver_id}: {e}")
 
         return {"success": True, "message": "Заказ завершён"}
     except Exception as e:

@@ -3234,13 +3234,13 @@ function getTrafficLevel(route) {
         modalAvatar.textContent = initials;
         modalAvatar.style.background = 'linear-gradient(135deg, #000 0%, #333 100%)';
       }
-      // Статус
+      // Статус (определяется по monthly_ride_count)
       let status = "Стандарт", statusClass = "";
-      if (profileData.ride_count >= 30) {
+      if (profileData.monthly_ride_count >= 30) {
         status = "Платина"; statusClass = "stat-platinum";
-      } else if (profileData.ride_count >= 20) {
+      } else if (profileData.monthly_ride_count >= 20) {
         status = "Золото"; statusClass = "stat-gold";
-      } else if (profileData.ride_count >= 10) {
+      } else if (profileData.monthly_ride_count >= 10) {
         status = "Серебро"; statusClass = "stat-silver";
       }
       // Обновляем статус

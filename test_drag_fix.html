@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест: Исправление перетаскивания маркера</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .description {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .solution {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .changes {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .highlight {
+            background: yellow;
+            padding: 2px 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Тест: Исправление перетаскивания маркера</h1>
+        
+        <div class="description">
+            <h3>Проблема:</h3>
+            <p>При перетаскивании маркера в модальном окне с картой, установленная точка геопозиции не переносилась на маркер.</p>
+        </div>
+        
+        <div class="solution">
+            <h3>Решение:</h3>
+            <p>Добавлены обработчики событий для синхронизации координат маркера в режиме реального времени:</p>
+            <ul>
+                <li>Обработчик <span class="highlight">drag</span> для обновления координат в реальном времени при перетаскивании</li>
+                <li>Обновление адреса в реальном времени с помощью <span class="highlight">getAddressFromCoords</span></li>
+                <li>Синхронизация маркера с основной картой при перетаскивании</li>
+                <li>Обновление масштаба основной карты для отображения изменений</li>
+            </ul>
+        </div>
+        
+        <div class="changes">
+            <h3>Внесенные изменения в /workspace/main.html:</h3>
+            <p><strong>Строки 2774-2793:</strong> Улучшен обработчик <span class="highlight">dragend</span> для обновления адреса и синхронизации с основной картой</p>
+            <p><strong>Строки 2795-2814:</strong> Добавлен обработчик <span class="highlight">drag</span> для обновления координат в реальном времени</p>
+        </div>
+        
+        <h3>Результат:</h3>
+        <p>Теперь при перетаскивании маркера в модальном окне:</p>
+        <ul>
+            <li>Координаты обновляются в реальном времени</li>
+            <li>Адрес обновляется в реальном времени</li>
+            <li>Маркер на основной карте синхронизируется с перетаскиваемым маркером</li>
+            <li>Кнопка подтверждения остается активной во время перетаскивания</li>
+        </ul>
+    </div>
+</body>
+</html>

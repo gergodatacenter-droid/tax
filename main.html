@@ -2775,6 +2775,42 @@
       fullscreenMarker.events.add('dragend', function(e) {
         const coords = fullscreenMarker.geometry.getCoordinates();
         updateConfirmButtonState(true);
+        // Обновляем адрес при завершении перетаскивания
+        if (targetAddressType) {
+          getAddressFromCoords(coords, targetAddressType, true);
+          // Также обновляем соответствующий маркер на основной карте
+          if (targetAddressType === 'start' && startMarker) {
+            startMarker.geometry.setCoordinates(coords);
+          } else if (targetAddressType === 'end' && endMarker) {
+            endMarker.geometry.setCoordinates(coords);
+          }
+          
+          // Обновляем масштаб основной карты, чтобы показать оба маркера
+          if (ymap) {
+            ymap.setBounds(ymap.geoObjects.getBounds(), {checkZoomRange: true});
+          }
+        }
+      });
+      
+      // Обработчик во время перетаскивания маркера для обновления координат в реальном времени
+      fullscreenMarker.events.add('drag', function(e) {
+        const coords = fullscreenMarker.geometry.getCoordinates();
+        updateConfirmButtonState(true);
+        // Обновляем адрес в реальном времени при перетаскивании
+        if (targetAddressType) {
+          getAddressFromCoords(coords, targetAddressType, true);
+          // Также обновляем соответствующий маркер на основной карте в реальном времени
+          if (targetAddressType === 'start' && startMarker) {
+            startMarker.geometry.setCoordinates(coords);
+          } else if (targetAddressType === 'end' && endMarker) {
+            endMarker.geometry.setCoordinates(coords);
+          }
+          
+          // Обновляем масштаб основной карты, чтобы показать оба маркера
+          if (ymap) {
+            ymap.setBounds(ymap.geoObjects.getBounds(), {checkZoomRange: true});
+          }
+        }
       });
       
       // Обработчик перемещения карты

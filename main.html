@@ -2761,10 +2761,19 @@
       // Отключаем всплывающие подсказки для POI
       fullscreenMap.behaviors.disable('rightMouseButtonMagnifier');
       
+      // Сделаем маркер перетаскиваемым
+      fullscreenMarker.options.set('draggable', true);
+      
       // Обработчик клика по карте
       fullscreenMap.events.add('click', function(e) {
         const coords = e.get('coords');
         fullscreenMarker.geometry.setCoordinates(coords);
+        updateConfirmButtonState(true);
+      });
+      
+      // Обработчик перетаскивания маркера
+      fullscreenMarker.events.add('dragend', function(e) {
+        const coords = fullscreenMarker.geometry.getCoordinates();
         updateConfirmButtonState(true);
       });
       

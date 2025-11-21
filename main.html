@@ -1259,6 +1259,73 @@
         100% { opacity: 0; }
       }
     }
+    /* Модальное окно подтверждения выбора маркера */
+    .marker-confirm-modal {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      padding: 20px;
+      z-index: 1000;
+      display: none;
+      width: 90%;
+      max-width: 350px;
+      border: 1px solid var(--border-color);
+    }
+    
+    .marker-confirm-modal.active {
+      display: block;
+      animation: slideUp 0.3s ease;
+    }
+    
+    @keyframes slideUp {
+      from {
+        transform: translateX(-50%) translateY(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    .marker-confirm-header {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+    
+    .marker-confirm-buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    
+    .marker-confirm-btn {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+    }
+    
+    .marker-confirm-btn.confirm {
+      background: var(--primary-color);
+      color: white;
+    }
+    
+    .marker-confirm-btn.cancel {
+      background: var(--background-light);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+    }
   </style>
 </head>
 <body>
@@ -1547,6 +1614,14 @@
     </div>
     <div class="history-orders" id="historyOrdersContainer">
       <!-- Здесь будет отображаться история заказов -->
+    </div>
+  </div>
+  <!-- Модальное окно подтверждения выбора маркера -->
+  <div class="marker-confirm-modal" id="markerConfirmModal">
+    <div class="marker-confirm-header">Подтвердите выбор адреса</div>
+    <div class="marker-confirm-buttons">
+      <button class="marker-confirm-btn cancel" id="cancelMarkerBtn">Отмена</button>
+      <button class="marker-confirm-btn confirm" id="confirmMarkerBtn">Подтвердить выбор</button>
     </div>
   </div>
   <div class="loader" id="routeLoader">Рассчитываем маршрут...</div>
@@ -1895,6 +1970,9 @@ async function checkActiveOrder() {
   const markerSetIndicator = document.getElementById('markerSetIndicator');
   const setStartMarkerBtn = document.getElementById('setStartMarkerBtn');
   const setEndMarkerBtn = document.getElementById('setEndMarkerBtn');
+  const markerConfirmModal = document.getElementById('markerConfirmModal');
+  const confirmMarkerBtn = document.getElementById('confirmMarkerBtn');
+  const cancelMarkerBtn = document.getElementById('cancelMarkerBtn');
 
   let driverTimerInterval = null;
   let timeLeft = 120;
@@ -1903,6 +1981,8 @@ async function checkActiveOrder() {
   let editAddressType = null;
   let longPressTimer = null;
   let isLongPressActive = false;
+  let tempMarkerCoords = null;
+  let tempMarkerType = null;
   // ======================
   // ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ДЛЯ API
   // ======================
@@ -2130,11 +2210,17 @@ async function checkActiveOrder() {
       ymap.geoObjects.add(endMarker);
       startMarker.events.add('dragend', (e) => {
         const coords = startMarker.geometry.getCoordinates();
-        getAddressFromCoords(coords, 'start', true);
+        // Store coordinates temporarily and show confirm modal
+        tempMarkerCoords = coords;
+        tempMarkerType = 'start';
+        showMarkerConfirmModal();
       });
       endMarker.events.add('dragend', (e) => {
         const coords = endMarker.geometry.getCoordinates();
-        getAddressFromCoords(coords, 'end', true);
+        // Store coordinates temporarily and show confirm modal
+        tempMarkerCoords = coords;
+        tempMarkerType = 'end';
+        showMarkerConfirmModal();
       });
       // Добавляем обработчики клика на карту для режима установки маркера
       ymap.events.add('click', function(e) {
@@ -2144,13 +2230,17 @@ async function checkActiveOrder() {
           
           if (markerSetMode === 'start') {
             startMarker.geometry.setCoordinates(coords);
-            getAddressFromCoords(coords, 'start', true);
+            // Store coordinates temporarily and show confirm modal
+            tempMarkerCoords = coords;
+            tempMarkerType = 'start';
           } else {
             endMarker.geometry.setCoordinates(coords);
-            getAddressFromCoords(coords, 'end', true);
+            // Store coordinates temporarily and show confirm modal
+            tempMarkerCoords = coords;
+            tempMarkerType = 'end';
           }
           
-          deactivateMarkerSetMode();
+          showMarkerConfirmModal();
         }
       });
       

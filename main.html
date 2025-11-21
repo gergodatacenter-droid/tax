@@ -2831,6 +2831,23 @@
             fullscreenMap.setCenter(coords, 15);
             fullscreenMarker.geometry.setCoordinates(coords);
             updateConfirmButtonState(true);
+            
+            // Также обновляем соответствующий маркер на основной карте
+            if (targetAddressType === 'start' && startMarker) {
+              startMarker.geometry.setCoordinates(coords);
+            } else if (targetAddressType === 'end' && endMarker) {
+              endMarker.geometry.setCoordinates(coords);
+            }
+            
+            // Обновляем адрес при получении геопозиции
+            if (targetAddressType) {
+              getAddressFromCoords(coords, targetAddressType, true);
+            }
+            
+            // Обновляем масштаб основной карты, чтобы показать изменения
+            if (ymap) {
+              ymap.setBounds(ymap.geoObjects.getBounds(), {checkZoomRange: true});
+            }
           }
         });
       }

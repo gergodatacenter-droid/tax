@@ -28,6 +28,23 @@ When dragging the marker, the geoposition was not updating with the marker posit
 ### Files Changed
 - `/workspace/main.html`
 
+## Issue 3: Main marker and geoposition not moving together in modal window
+
+### Problem
+When using the geolocation button in the modal window, the main marker on the primary map was not moving together with the geoposition. Only the marker in the modal window was updated, but the corresponding marker on the main map remained in its previous position.
+
+### Solution
+Modified the geolocation event handler in the modal window to synchronize the position between:
+1. The marker in the modal window (fullscreenMarker)
+2. The corresponding main marker on the primary map (startMarker or endMarker)
+3. Updated the address field based on the new geoposition
+4. Adjusted the zoom level of the main map to reflect the changes
+
+The changes ensure that when a user clicks the geolocation button in the modal window, both the modal marker and the main map marker move together to the current location.
+
+### Files Changed
+- `/workspace/main.html`
+
 ## Technical Details
 
-The changes ensure that both clicking on the map and dragging the marker properly update the address field and maintain synchronization between the UI and the underlying data model.
+The changes ensure that both clicking on the map and dragging the marker properly update the address field and maintain synchronization between the UI and the underlying data model. Additionally, when using geolocation in the modal window, both the modal marker and the corresponding main map marker now move together.

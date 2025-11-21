@@ -2287,6 +2287,13 @@
           const inputFull = type === 'start' ? startInputFull : endInputFull;
           inputFull.value = fullAddr;
           input.value = fullAddr;
+          
+          // Trigger input and change events to ensure UI updates
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          inputFull.dispatchEvent(new Event('input', { bubbles: true }));
+          inputFull.dispatchEvent(new Event('change', { bubbles: true }));
+          
           if (recalc) calculateRoute();
         }
       }).catch(error => console.error(`Ошибка получения адреса:`, error));

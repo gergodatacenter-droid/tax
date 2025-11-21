@@ -2781,8 +2781,6 @@
           // Также обновляем соответствующий маркер на основной карте
           if (targetAddressType === 'start' && startMarker) {
             startMarker.geometry.setCoordinates(coords);
-            // Обновляем currentLocation, если перетаскивается стартовая точка
-            currentLocation = coords;
           } else if (targetAddressType === 'end' && endMarker) {
             endMarker.geometry.setCoordinates(coords);
           }
@@ -2804,8 +2802,6 @@
           // Также обновляем соответствующий маркер на основной карте в реальном времени
           if (targetAddressType === 'start' && startMarker) {
             startMarker.geometry.setCoordinates(coords);
-            // Обновляем currentLocation, если перетаскивается стартовая точка
-            currentLocation = coords;
           } else if (targetAddressType === 'end' && endMarker) {
             endMarker.geometry.setCoordinates(coords);
           }
